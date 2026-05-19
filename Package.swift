@@ -36,7 +36,7 @@ let package = Package(
         ),
         .target(
             name: "HermesUI",
-            dependencies: ["HermesCore", "HermesBridge"],
+            dependencies: ["HermesCore", "HermesBridge", "HermesCapabilities"],
             path: "Sources/HermesUI"
         ),
         .target(
