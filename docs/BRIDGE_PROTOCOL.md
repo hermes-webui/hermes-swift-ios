@@ -249,6 +249,10 @@ const runId = await window.hermes.invoke("bridge.agent.runPrompt", { prompt: "..
 
 ---
 
+## Mac-side pairing UX
+
+The pairing entry point must NOT be buried in Preferences. See [MAC_PAIRING_UX.md](MAC_PAIRING_UX.md) for the full UX spec — short version: menubar item at the top, global hotkey ⇧⌘P, and a toolbar button on the browser window, all opening the same dedicated pairing window. Target latency from "Mac awake" to "QR on screen" is ≤ 2 seconds via the primary path.
+
 ## What the Mac must build
 
 `hermes-swift-mac` does not yet ship a `BridgeServer`. Required pieces:

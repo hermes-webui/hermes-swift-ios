@@ -74,8 +74,8 @@ swift test
 
 ## Pairing flow
 
-1. **On the Mac** *(requires hermes-swift-mac BridgeServer, in flight)*: open Hermes → Preferences → Pair an iPhone → a QR appears containing host, port, leaf-cert fingerprint, and a single-use bearer token.
-2. **On the iPhone**: open Settings → "Pair a new Mac" → tap **Open camera** → align the QR inside the frame.
+1. **On the Mac** *(requires hermes-swift-mac BridgeServer, in flight)*: trigger "Pair iPhone" from the menubar, the global hotkey ⇧⌘P, or the browser-window toolbar button — see [docs/MAC_PAIRING_UX.md](docs/MAC_PAIRING_UX.md) for the UX spec. A QR appears containing host, port, leaf-cert fingerprint, and a single-use bearer token.
+2. **On the iPhone**: on first launch the app shows a full-screen "Pair with your Mac" hero — tap **Scan pairing code** → align the QR inside the frame. (After pairing, the QR scanner is available anytime from Settings → "Pair another Mac.")
 3. The iPhone decodes the payload, persists it to the Keychain (`PairedDevice` in [`HermesBridge/Pairing/PairedDevice.swift`](Sources/HermesBridge/Pairing/PairedDevice.swift)), and opens a pinned `wss://` connection.
 4. On the first successful handshake, the Mac sends `authRotated` with a fresh token; the iPhone replaces the QR-baked token in the Keychain.
 5. Subsequent launches reconnect automatically using the rotated token.

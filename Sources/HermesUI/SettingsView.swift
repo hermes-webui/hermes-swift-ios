@@ -17,19 +17,33 @@ public struct SettingsView: View {
     public var body: some View {
         NavigationStack {
             Form {
-                Section("Hermes Web UI") {
-                    TextField("URL", text: $urlInput)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onSubmit { applyURL() }
-                    Button("Apply") { applyURL() }
+                // Pairing is the hero action — first section, big button, regardless of whether Macs are already paired.
+                Section {
+                    Button {
+                        showingPairing = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "qrcode.viewfinder")
+                                .font(.title2)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(session.pairedDevices.isEmpty ? "Pair with your Mac" : "Pair another Mac")
+                                    .font(.headline)
+                                Text("Scan the code shown on your Mac")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.footnote)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
                 }
 
-                Section("Paired Macs") {
-                    if session.pairedDevices.isEmpty {
-                        Text("No Macs paired").foregroundStyle(.secondary)
-                    } else {
+                if !session.pairedDevices.isEmpty {
+                    Section("Paired Macs") {
                         ForEach(session.pairedDevices, id: \.id) { device in
                             HStack {
                                 VStack(alignment: .leading) {
@@ -51,7 +65,22 @@ public struct SettingsView: View {
                             }
                         }
                     }
-                    Button("Pair a new Mac") { showingPairing = true }
+
+                    Section("Connection") {
+                        ConnectionStatusView(session: session)
+                        if session.activeClient != nil {
+                            Button("Disconnect") { Task { await session.disconnect() } }
+                        }
+                    }
+                }
+
+                Section("Hermes Web UI") {
+                    TextField("URL", text: $urlInput)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .onSubmit { applyURL() }
+                    Button("Apply") { applyURL() }
                 }
 
                 Section("Transport") {
@@ -65,13 +94,6 @@ public struct SettingsView: View {
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                }
-
-                Section("Connection") {
-                    ConnectionStatusView(session: session)
-                    if session.activeClient != nil {
-                        Button("Disconnect") { Task { await session.disconnect() } }
-                    }
                 }
             }
             .navigationTitle("Settings")

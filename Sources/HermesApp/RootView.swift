@@ -14,6 +14,22 @@ struct RootView: View {
     }
 
     var body: some View {
+        Group {
+            if session.pairedDevices.isEmpty {
+                PairHeroView(session: session)
+            } else {
+                webShell
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(settings: settings, session: session)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .hermesOpenSettings)) { _ in
+            showingSettings = true
+        }
+    }
+
+    private var webShell: some View {
         ZStack(alignment: .topTrailing) {
             HermesWebView(url: settings.webViewURL, bridge: bridge)
                 .ignoresSafeArea()
@@ -29,9 +45,6 @@ struct RootView: View {
                 ConnectionStatusView(session: session)
             }
             .padding()
-        }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView(settings: settings, session: session)
         }
     }
 }
