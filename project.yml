@@ -1,0 +1,92 @@
+name: HermesiOS
+options:
+  bundleIdPrefix: com.hermeswebui
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    SWIFT_STRICT_CONCURRENCY: minimal
+
+packages:
+  HermesiOSLib:
+    path: .
+
+targets:
+  HermesiOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/HermesApp
+    dependencies:
+      - package: HermesiOSLib
+        product: HermesApp
+      - package: HermesiOSLib
+        product: HermesWebView
+      - package: HermesiOSLib
+        product: HermesBridge
+      - package: HermesiOSLib
+        product: HermesCapabilities
+      - package: HermesiOSLib
+        product: HermesUI
+      - package: HermesiOSLib
+        product: HermesCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hermeswebui.HermesiOS
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+    info:
+      path: Sources/HermesApp/Info.plist
+      properties:
+        CFBundleDisplayName: Hermes
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UILaunchScreen:
+          UIColorName: ""
+        # Bonjour service discovery for the Mac BridgeServer
+        NSBonjourServices:
+          - _hermes._tcp
+        NSLocalNetworkUsageDescription: "Hermes uses your local network to discover and securely connect to a Mac running Hermes Agent."
+        # Capability permission strings — every HermesCapabilities/* module that touches a permission-gated API must keep its key here.
+        NSCameraUsageDescription: "Hermes uses the camera so the agent can capture photos and scan QR codes for pairing with your Mac."
+        NSMicrophoneUsageDescription: "Hermes uses the microphone so the agent can capture audio for transcription and voice commands."
+        NSPhotoLibraryUsageDescription: "Hermes uses your photo library so the agent can read and save images you share with it."
+        NSLocationWhenInUseUsageDescription: "Hermes uses your location while the app is open so the agent can answer location-aware questions."
+        NSContactsUsageDescription: "Hermes uses your contacts so the agent can look up people you ask about and compose messages on your behalf."
+        NSFaceIDUsageDescription: "Hermes uses Face ID to authorize sensitive agent actions on this device."
+        # ATS — allow non-HTTPS web content during development; native networking is unaffected.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsInWebContent: true
+        # Custom URL scheme for pairing fallback (hermes://pair?host=...&token=...)
+        CFBundleURLTypes:
+          - CFBundleURLName: com.hermeswebui.HermesiOS.pairing
+            CFBundleURLSchemes:
+              - hermes
+        UIBackgroundModes:
+          - audio
+          - voip
+          - remote-notification
+
+  HermesiOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/HermesiOSTests
+    dependencies:
+      - target: HermesiOS
+      - package: HermesiOSLib
+        product: HermesBridge
+      - package: HermesiOSLib
+        product: HermesCapabilities
+      - package: HermesiOSLib
+        product: HermesCore
