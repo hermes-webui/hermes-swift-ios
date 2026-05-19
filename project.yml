@@ -1,0 +1,94 @@
+name: HermesiOS
+options:
+  bundleIdPrefix: com.hermeswebui
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    SWIFT_STRICT_CONCURRENCY: minimal
+
+packages:
+  HermesiOSLib:
+    path: .
+
+targets:
+  HermesiOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/HermesApp
+    dependencies:
+      - package: HermesiOSLib
+        product: HermesApp
+      - package: HermesiOSLib
+        product: HermesWebView
+      - package: HermesiOSLib
+        product: HermesBridge
+      - package: HermesiOSLib
+        product: HermesCapabilities
+      - package: HermesiOSLib
+        product: HermesUI
+      - package: HermesiOSLib
+        product: HermesCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hermeswebui.HermesiOS
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+    info:
+      path: Sources/HermesApp/Info.plist
+      properties:
+        CFBundleDisplayName: Hermes
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UILaunchScreen:
+          UIColorName: ""
+        # Bonjour service discovery for the Mac BridgeServer
+        NSBonjourServices:
+          - _hermes._tcp
+        NSLocalNetworkUsageDescription: "Hermes uses your local network to discover and securely connect to a Mac running Hermes Agent."
+        # Capability permission strings — only declare a key when there is an actual user-facing code path that requests it.
+        # Apple's review flags apps that declare permissions they never use ("requesting permissions you don't use") and
+        # heavily scrutinizes high-risk permissions like Contacts. Add a key here in the SAME PR that wires up the flow.
+        NSCameraUsageDescription: "Hermes uses the camera to scan the pairing QR code shown on your Mac."
+        NSFaceIDUsageDescription: "Hermes uses Face ID to authorize sensitive agent actions on this device."
+        # Deferred until there's a visible user flow that needs them — see CLAUDE.md "App Store review notes":
+        #   NSMicrophoneUsageDescription
+        #   NSPhotoLibraryUsageDescription
+        #   NSLocationWhenInUseUsageDescription
+        #   NSContactsUsageDescription
+        # ATS — allow non-HTTPS web content during development; native networking is unaffected.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsInWebContent: true
+        # Custom URL scheme for pairing fallback (hermes://pair?host=...&token=...)
+        CFBundleURLTypes:
+          - CFBundleURLName: com.hermeswebui.HermesiOS.pairing
+            CFBundleURLSchemes:
+              - hermes
+        # No UIBackgroundModes declared in the first submission.
+        # voip and audio background modes get heavy reviewer scrutiny and are routinely rejected when not core to the app.
+        # Add background modes (and document the justification) in the same PR as the feature that needs them.
+
+  HermesiOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/HermesiOSTests
+    dependencies:
+      - target: HermesiOS
+      - package: HermesiOSLib
+        product: HermesBridge
+      - package: HermesiOSLib
+        product: HermesCapabilities
+      - package: HermesiOSLib
+        product: HermesCore

@@ -110,10 +110,12 @@ window.hermes.deliverResponse({ id, result, error })
 ## Bridge rules — read before touching `Sources/HermesBridge/`
 
 - **Always Codable** — never `[String: Any]` for wire types. See `Protocol/Message.swift`.
-- **Protocol versioning** — `Message.protocolVersion` must match `BridgeProtocol.currentVersion`. Reject mismatches with a typed error.
+- **Protocol versioning** — `Message.protocolVersion` must match `BridgeProtocol.currentVersion`. Reject mismatches with a typed error. Bump the version in code and `docs/BRIDGE_PROTOCOL.md` in the same commit.
 - **Transport-agnostic Client** — `BridgeClient` doesn't know if it's on Bonjour, WebSocket, or Relay. It holds a `Transport` and delegates send/receive. Add new transports by conforming to the `Transport` protocol, not by branching inside the client.
-- **Pairing is one-time** — Mac shows a QR with `{host, port, token, fingerprint}`; iOS scans, validates fingerprint, stores token in Keychain via `HermesCore.Keychain`. Re-pair only on user request or fingerprint mismatch.
-- **Tokens never go in UserDefaults or plist** — Keychain only.
+- **TLS is mandatory in production** — `BridgeClient.lanURL()` constructs `wss://`. `ws://` is accepted by `WebSocketTransport` for local dev only and logs a warning. Don't silently downgrade.
+- **Fingerprint pinning is non-negotiable on TLS** — every `WebSocketTransport` carrying a `wss://` URL must be initialized with a `FingerprintPinner`. `BridgeClient.selectTransport()` does this from `PairedDevice.fingerprint`. If you add a new entry point, mirror that wiring.
+- **Pairing is one-time** — Mac shows a QR with `{host, port, fingerprint, deviceToken, relayRoutingToken?}`; iOS scans, decodes via `QRPairing.decode`, persists to Keychain via `PairedDeviceStore`. The QR-baked token is *single-use* — the Mac rotates it via an `authRotated` message after first successful handshake and `BridgeClient.handleAuthRotated` writes the fresh token to Keychain. Re-pair only on user request or fingerprint mismatch.
+- **Tokens and pairing payloads never go in UserDefaults or plist** — Keychain only, via `PairedDeviceStore`.
 
 ---
 
@@ -130,6 +132,27 @@ Every capability has:
 The registry's job is to be the single place the JS bridge looks up capability handlers. If you add a capability without registering it, the JS bridge will reject calls with `error.code = "unknown_capability"`.
 
 ---
+
+## App Store review notes — read before adding entitlements, plist keys, or capabilities
+
+App Review will reject submissions for several specific patterns. We trim the surface area to only what's actually used so reviews stay fast.
+
+**Permission strings:** Only declare an `NS*UsageDescription` in `project.yml` in the **same PR** that wires up the user-facing flow which triggers it. Declaring keys you don't use is flagged as "requesting permissions you don't use." Currently declared: `NSCameraUsageDescription` (QR pairing scanner), `NSFaceIDUsageDescription` (BiometricsCapability), `NSLocalNetworkUsageDescription` (Bonjour). Deferred: microphone, photo library, location, contacts.
+
+**High-scrutiny permissions** — get a second look before adding:
+
+- **Contacts (`NSContactsUsageDescription`)** — frequently rejected when the user flow doesn't make access obviously necessary. `ContactsCapability` exists in the codebase but is **not registered by default**; opt it in only with a concrete UI flow.
+- **Microphone, Photo Library, Location-Always, Health, Bluetooth (always-on)** — same caution.
+
+**Background modes:** No `UIBackgroundModes` are declared in the first submission. `voip` and `audio` get rejected when they're not core to the app's purpose. Add background modes — with reviewer-facing justification — only alongside the feature that needs them.
+
+**ATS (App Transport Security):** `NSAllowsArbitraryLoadsInWebContent` is set so the WKWebView can load non-HTTPS hermes-webui instances on a LAN. This is reviewable but generally accepted for browser-style apps; native networking is not exempted. Switch to HTTPS-everywhere before shipping when feasible.
+
+**Encryption (`ITSAppUsesNonExemptEncryption`):** WebSocket over TLS counts as standard encryption — declare `ITSAppUsesNonExemptEncryption=false` once we ship to TestFlight unless we add custom crypto.
+
+**Web content policy:** WKWebViews that load user-controlled URLs need to be presented as a clear browser/agent surface, not a wrapped third-party site. The settings screen exposing the target URL helps here.
+
+When in doubt, slim down. Removing a permission later costs nothing; getting rejected and re-submitting costs days.
 
 ## Common gotchas
 
