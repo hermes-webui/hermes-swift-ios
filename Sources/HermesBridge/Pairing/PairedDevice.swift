@@ -57,4 +57,27 @@ public enum PairedDeviceStore {
         current.removeAll { $0.id == id }
         try save(current)
     }
+
+    /// Replace the deviceToken for an already-paired device. Used when the Mac sends `authRotated`
+    /// after the first successful handshake — invalidating the QR-baked token in favour of a fresh one.
+    /// Returns the updated PairedDevice, or nil if no device with that id exists.
+    @discardableResult
+    public static func replaceToken(deviceId: String, newToken: String) throws -> PairedDevice? {
+        var current = load()
+        guard let idx = current.firstIndex(where: { $0.id == deviceId }) else { return nil }
+        let old = current[idx]
+        let updated = PairedDevice(
+            id: old.id,
+            displayName: old.displayName,
+            host: old.host,
+            port: old.port,
+            fingerprint: old.fingerprint,
+            deviceToken: newToken,
+            relayRoutingToken: old.relayRoutingToken,
+            pairedAt: old.pairedAt
+        )
+        current[idx] = updated
+        try save(current)
+        return updated
+    }
 }

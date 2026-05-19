@@ -2,7 +2,9 @@
 
 > The best way to use Hermes from your iPhone.
 
-A native iOS client for [Hermes Agent](https://github.com/NousResearch/hermes-agent) — built around the same WebKit shell pattern as [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac), with a bidirectional bridge that lets the iPhone discover and control a Hermes instance running on your Mac, plus iPhone-native capabilities (camera, location, contacts, notifications, share sheet, biometrics) surfaced into the same web UI.
+A native iOS client for [Hermes Agent](https://github.com/NousResearch/hermes-agent) — built around the same WebKit shell pattern as [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac), with a bidirectional bridge that lets the iPhone discover and control a Hermes instance running on your Mac, plus iPhone-native capabilities (camera, notifications, share sheet, biometrics) surfaced into the same web UI.
+
+**Pair once with a QR code, then talk over TLS:** the Mac displays a QR encoding its host, port, leaf-cert fingerprint, and a single-use bearer token. The iPhone scans, opens a pinned `wss://` connection, and on first successful handshake the Mac rotates the token — so a stolen QR is useless after the legitimate device has connected once. No SSH, no shell, no general-purpose remote-access surface.
 
 ## Architecture at a glance
 
@@ -70,9 +72,33 @@ swift build
 swift test
 ```
 
+## Pairing flow
+
+1. **On the Mac** *(requires hermes-swift-mac BridgeServer, in flight)*: open Hermes → Preferences → Pair an iPhone → a QR appears containing host, port, leaf-cert fingerprint, and a single-use bearer token.
+2. **On the iPhone**: open Settings → "Pair a new Mac" → tap **Open camera** → align the QR inside the frame.
+3. The iPhone decodes the payload, persists it to the Keychain (`PairedDevice` in [`HermesBridge/Pairing/PairedDevice.swift`](Sources/HermesBridge/Pairing/PairedDevice.swift)), and opens a pinned `wss://` connection.
+4. On the first successful handshake, the Mac sends `authRotated` with a fresh token; the iPhone replaces the QR-baked token in the Keychain.
+5. Subsequent launches reconnect automatically using the rotated token.
+
+Fallbacks:
+- **`hermes://pair?payload=<base64>`** deep link — same payload format, useful when the QR is on the same device.
+- **Manual paste** — fallback text field in the pairing sheet accepts `hermes:pair:v1:<base64>` directly.
+
+## Security model
+
+| Property | Mechanism |
+| --- | --- |
+| Confidentiality | `wss://` (TLS) — `ws://` permitted for local dev only, logs a warning |
+| Server identity | SHA-256 leaf-cert fingerprint pinning — `FingerprintPinner` in [`HermesBridge/Transport/FingerprintPinner.swift`](Sources/HermesBridge/Transport/FingerprintPinner.swift) |
+| Client auth | Bearer token in `Authorization` header, rotated once after pairing |
+| Token storage | Keychain, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` |
+| Protocol versioning | Every frame carries `protocolVersion`; mismatches reject with `unsupported_version` |
+
+See [docs/BRIDGE_PROTOCOL.md](docs/BRIDGE_PROTOCOL.md) for the full message contract.
+
 ## Status
 
-This is initial scaffolding — the bridge protocol is defined, transports are stubbed where they need a paired Mac-side BridgeServer (not yet shipped in `hermes-swift-mac`). See [docs/BRIDGE_PROTOCOL.md](docs/BRIDGE_PROTOCOL.md) for the message contract.
+Initial scaffolding. The iOS side is wired end-to-end (camera scanner, pairing, Keychain persistence, transports, fingerprint pinner, token-rotation handler). The Mac-side `BridgeServer` it talks to is a separate PR on [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac) — until that lands, the iPhone can complete pairing flows against the manual-paste fallback but the WebSocket connect will fail.
 
 ## Related
 

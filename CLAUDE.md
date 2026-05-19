@@ -110,10 +110,12 @@ window.hermes.deliverResponse({ id, result, error })
 ## Bridge rules — read before touching `Sources/HermesBridge/`
 
 - **Always Codable** — never `[String: Any]` for wire types. See `Protocol/Message.swift`.
-- **Protocol versioning** — `Message.protocolVersion` must match `BridgeProtocol.currentVersion`. Reject mismatches with a typed error.
+- **Protocol versioning** — `Message.protocolVersion` must match `BridgeProtocol.currentVersion`. Reject mismatches with a typed error. Bump the version in code and `docs/BRIDGE_PROTOCOL.md` in the same commit.
 - **Transport-agnostic Client** — `BridgeClient` doesn't know if it's on Bonjour, WebSocket, or Relay. It holds a `Transport` and delegates send/receive. Add new transports by conforming to the `Transport` protocol, not by branching inside the client.
-- **Pairing is one-time** — Mac shows a QR with `{host, port, token, fingerprint}`; iOS scans, validates fingerprint, stores token in Keychain via `HermesCore.Keychain`. Re-pair only on user request or fingerprint mismatch.
-- **Tokens never go in UserDefaults or plist** — Keychain only.
+- **TLS is mandatory in production** — `BridgeClient.lanURL()` constructs `wss://`. `ws://` is accepted by `WebSocketTransport` for local dev only and logs a warning. Don't silently downgrade.
+- **Fingerprint pinning is non-negotiable on TLS** — every `WebSocketTransport` carrying a `wss://` URL must be initialized with a `FingerprintPinner`. `BridgeClient.selectTransport()` does this from `PairedDevice.fingerprint`. If you add a new entry point, mirror that wiring.
+- **Pairing is one-time** — Mac shows a QR with `{host, port, fingerprint, deviceToken, relayRoutingToken?}`; iOS scans, decodes via `QRPairing.decode`, persists to Keychain via `PairedDeviceStore`. The QR-baked token is *single-use* — the Mac rotates it via an `authRotated` message after first successful handshake and `BridgeClient.handleAuthRotated` writes the fresh token to Keychain. Re-pair only on user request or fingerprint mismatch.
+- **Tokens and pairing payloads never go in UserDefaults or plist** — Keychain only, via `PairedDeviceStore`.
 
 ---
 

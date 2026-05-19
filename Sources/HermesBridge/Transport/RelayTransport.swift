@@ -22,9 +22,13 @@ public final class RelayTransport: Transport, @unchecked Sendable {
     ///   - baseURL: e.g. `wss://relay.hermes-webui.dev`
     ///   - routingToken: a shared, randomly-generated token (issued during pairing) — identifies the iPhone/Mac pair.
     ///   - deviceToken: this device's auth token (also from pairing).
-    public init(baseURL: URL, routingToken: String, deviceToken: String) {
+    ///   - pinner: optional cert pinning. The relay terminates one TLS hop and the Mac terminates
+    ///     another inside it — pinning on the relay leg verifies the relay's identity, not the Mac's.
+    ///     End-to-end Mac authenticity is established by the `deviceToken` + server-issued challenges
+    ///     once the channel is open. Pass nil if you trust the relay's standard cert chain.
+    public init(baseURL: URL, routingToken: String, deviceToken: String, pinner: FingerprintPinner? = nil) {
         let url = baseURL.appendingPathComponent("v1/bridge").appendingPathComponent(routingToken)
-        self.inner = WebSocketTransport(url: url, token: deviceToken)
+        self.inner = WebSocketTransport(url: url, token: deviceToken, pinner: pinner)
     }
 
     public func connect() async throws { try await inner.connect() }

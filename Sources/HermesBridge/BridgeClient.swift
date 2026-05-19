@@ -129,34 +129,35 @@ public final class BridgeClient: ObservableObject {
     }
 
     private func selectTransport() async throws -> Transport {
+        let pinner = FingerprintPinner(expectedFingerprint: device.fingerprint)
         switch preference {
         case .lanOnly:
-            return WebSocketTransport(url: lanURL(), token: device.deviceToken)
+            return WebSocketTransport(url: lanURL(), token: device.deviceToken, pinner: pinner)
         case .relayOnly:
             guard let r = device.relayRoutingToken else {
                 throw TransportError.underlying("Mac did not enable relay during pairing")
             }
-            return RelayTransport(baseURL: relayBaseURL, routingToken: r, deviceToken: device.deviceToken)
+            return RelayTransport(baseURL: relayBaseURL, routingToken: r, deviceToken: device.deviceToken, pinner: pinner)
         case .auto:
             // TODO(perf): race LAN against relay with a short head-start and pick whichever opens first.
             // For now: try LAN, fall back to relay if a routing token exists.
-            let lan = WebSocketTransport(url: lanURL(), token: device.deviceToken)
+            let lan = WebSocketTransport(url: lanURL(), token: device.deviceToken, pinner: pinner)
             do {
                 try await lan.connect()
                 return lan
             } catch {
                 Loggers.bridge.info("LAN transport failed, falling back to relay: \(error.localizedDescription, privacy: .public)")
                 guard let r = device.relayRoutingToken else { throw error }
-                let relay = RelayTransport(baseURL: relayBaseURL, routingToken: r, deviceToken: device.deviceToken)
-                return relay
+                return RelayTransport(baseURL: relayBaseURL, routingToken: r, deviceToken: device.deviceToken, pinner: pinner)
             }
         }
     }
 
+    /// `wss://<host>:<port>/v1/bridge` — TLS is the production transport; the fingerprint on the
+    /// paired device's record pins the leaf cert so a swapped server is rejected.
     private func lanURL() -> URL {
-        // ws://<host>:<port>/v1/bridge
         var comps = URLComponents()
-        comps.scheme = "ws"
+        comps.scheme = "wss"
         comps.host = device.host
         comps.port = device.port
         comps.path = "/v1/bridge"
@@ -199,6 +200,8 @@ public final class BridgeClient: ObservableObject {
             eventContinuation.yield(ev)
         case .capabilityRequest(let req):
             capContinuation.yield(req)
+        case .authRotated(let rotated):
+            await handleAuthRotated(rotated)
         case .error(let err):
             Loggers.bridge.error("Server error: \(err.code, privacy: .public) - \(err.message, privacy: .public)")
             if let inReplyTo = err.inReplyTo, let cont = pendingCommands.removeValue(forKey: inReplyTo) {
@@ -209,6 +212,17 @@ public final class BridgeClient: ObservableObject {
             break
         case .pong, .commandRequest, .capabilityResponse:
             break
+        }
+    }
+
+    /// Persist a freshly-issued device token from the Mac. The Mac sends this once after the first
+    /// successful handshake on a newly-paired device, invalidating the token baked into the QR.
+    private func handleAuthRotated(_ rotated: AuthRotated) async {
+        do {
+            _ = try PairedDeviceStore.replaceToken(deviceId: device.id, newToken: rotated.newDeviceToken)
+            Loggers.bridge.info("Device token rotated for \(self.device.displayName, privacy: .public)")
+        } catch {
+            Loggers.bridge.error("Failed to persist rotated token: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

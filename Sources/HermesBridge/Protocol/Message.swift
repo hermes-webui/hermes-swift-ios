@@ -24,6 +24,13 @@ public struct Message: Codable, Sendable, Equatable {
         case capabilityRequest
         /// Client → Server: response to a capabilityRequest.
         case capabilityResponse
+        /// Server → Client: replace the deviceToken with a freshly-issued one. Single-direction.
+        /// The Mac sends this once, immediately after the first successful handshake on a newly-paired
+        /// device — invalidating the token that was baked into the QR. The iPhone persists the new
+        /// token to the Keychain via PairedDeviceStore.replaceToken and uses it for subsequent
+        /// connections. A QR that was photographed in transit then becomes useless after the legitimate
+        /// device's first connect.
+        case authRotated
         /// Either direction: liveness probe.
         case ping
         /// Either direction: response to ping.
@@ -38,6 +45,7 @@ public struct Message: Codable, Sendable, Equatable {
         case event(EventPayload)
         case capabilityRequest(CapabilityRequest)
         case capabilityResponse(CapabilityResponse)
+        case authRotated(AuthRotated)
         case ping
         case pong
         case error(BridgeError)
@@ -52,6 +60,7 @@ public struct Message: Codable, Sendable, Equatable {
             case .event(let v):              try c.encode("event", forKey: .type);              try c.encode(v, forKey: .data)
             case .capabilityRequest(let v):  try c.encode("capabilityRequest", forKey: .type);  try c.encode(v, forKey: .data)
             case .capabilityResponse(let v): try c.encode("capabilityResponse", forKey: .type); try c.encode(v, forKey: .data)
+            case .authRotated(let v):        try c.encode("authRotated", forKey: .type);        try c.encode(v, forKey: .data)
             case .ping:                      try c.encode("ping", forKey: .type)
             case .pong:                      try c.encode("pong", forKey: .type)
             case .error(let v):              try c.encode("error", forKey: .type);              try c.encode(v, forKey: .data)
@@ -67,12 +76,26 @@ public struct Message: Codable, Sendable, Equatable {
             case "event":              self = .event(try c.decode(EventPayload.self, forKey: .data))
             case "capabilityRequest":  self = .capabilityRequest(try c.decode(CapabilityRequest.self, forKey: .data))
             case "capabilityResponse": self = .capabilityResponse(try c.decode(CapabilityResponse.self, forKey: .data))
+            case "authRotated":        self = .authRotated(try c.decode(AuthRotated.self, forKey: .data))
             case "ping":               self = .ping
             case "pong":               self = .pong
             case "error":              self = .error(try c.decode(BridgeError.self, forKey: .data))
             default: throw DecodingError.dataCorruptedError(forKey: .type, in: c, debugDescription: "Unknown payload type \(type)")
             }
         }
+    }
+}
+
+public struct AuthRotated: Codable, Sendable, Equatable {
+    /// The replacement bearer token. Will be used in `Authorization: Bearer <token>` on next connect.
+    public let newDeviceToken: String
+    /// Optional ISO-8601 timestamp until which the *old* token will still be accepted.
+    /// Allows the iPhone to gracefully transition without dropping the live connection.
+    public let oldTokenValidUntil: String?
+
+    public init(newDeviceToken: String, oldTokenValidUntil: String? = nil) {
+        self.newDeviceToken = newDeviceToken
+        self.oldTokenValidUntil = oldTokenValidUntil
     }
 }
 

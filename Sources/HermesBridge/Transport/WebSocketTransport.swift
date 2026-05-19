@@ -8,6 +8,7 @@ public final class WebSocketTransport: NSObject, Transport, @unchecked Sendable 
 
     private let url: URL
     private let token: String
+    private let pinner: FingerprintPinner?
     private var session: URLSession!
     private var task: URLSessionWebSocketTask?
 
@@ -24,9 +25,16 @@ public final class WebSocketTransport: NSObject, Transport, @unchecked Sendable 
         return _state
     }
 
-    public init(url: URL, token: String) {
+    /// - Parameters:
+    ///   - url: full WebSocket URL (use `wss://` in production; `ws://` is accepted for local dev).
+    ///   - token: bearer token issued during pairing.
+    ///   - pinner: when `url` is `wss://`, pass a `FingerprintPinner` configured with the paired Mac's
+    ///     leaf-cert fingerprint. Mismatches will terminate the TLS handshake. Pass nil only for
+    ///     `ws://` (no TLS to pin) or when audit-only inspection is sufficient.
+    public init(url: URL, token: String, pinner: FingerprintPinner? = nil) {
         self.url = url
         self.token = token
+        self.pinner = pinner
 
         var stateCont: AsyncStream<TransportState>.Continuation!
         self.stateStream = AsyncStream { stateCont = $0 }
@@ -37,6 +45,10 @@ public final class WebSocketTransport: NSObject, Transport, @unchecked Sendable 
         self.stateContinuation = stateCont
         self.messageContinuation = msgCont
         self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+
+        if pinner == nil, url.scheme?.lowercased() == "wss" {
+            Loggers.transport.error("wss:// without a FingerprintPinner — cert pinning is OFF. This is unsafe in production.")
+        }
     }
 
     public func connect() async throws {
@@ -113,6 +125,19 @@ extension WebSocketTransport: URLSessionWebSocketDelegate {
         let reasonString = reason.flatMap { String(data: $0, encoding: .utf8) } ?? "code \(closeCode.rawValue)"
         Loggers.transport.info("WebSocket closed: \(reasonString, privacy: .public)")
         setState(.disconnected(reason: reasonString))
+    }
+
+    /// Forward server-trust challenges to the fingerprint pinner when present.
+    /// Without a pinner, default handling applies (system trust store).
+    public func urlSession(_ session: URLSession,
+                           didReceive challenge: URLAuthenticationChallenge,
+                           completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+           let pinner = self.pinner {
+            pinner.urlSession(session, didReceive: challenge, completionHandler: completionHandler)
+        } else {
+            completionHandler(.performDefaultHandling, nil)
+        }
     }
 }
 
