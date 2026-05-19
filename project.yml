@@ -57,13 +57,16 @@ targets:
         NSBonjourServices:
           - _hermes._tcp
         NSLocalNetworkUsageDescription: "Hermes uses your local network to discover and securely connect to a Mac running Hermes Agent."
-        # Capability permission strings — every HermesCapabilities/* module that touches a permission-gated API must keep its key here.
-        NSCameraUsageDescription: "Hermes uses the camera so the agent can capture photos and scan QR codes for pairing with your Mac."
-        NSMicrophoneUsageDescription: "Hermes uses the microphone so the agent can capture audio for transcription and voice commands."
-        NSPhotoLibraryUsageDescription: "Hermes uses your photo library so the agent can read and save images you share with it."
-        NSLocationWhenInUseUsageDescription: "Hermes uses your location while the app is open so the agent can answer location-aware questions."
-        NSContactsUsageDescription: "Hermes uses your contacts so the agent can look up people you ask about and compose messages on your behalf."
+        # Capability permission strings — only declare a key when there is an actual user-facing code path that requests it.
+        # Apple's review flags apps that declare permissions they never use ("requesting permissions you don't use") and
+        # heavily scrutinizes high-risk permissions like Contacts. Add a key here in the SAME PR that wires up the flow.
+        NSCameraUsageDescription: "Hermes uses the camera to scan the pairing QR code shown on your Mac."
         NSFaceIDUsageDescription: "Hermes uses Face ID to authorize sensitive agent actions on this device."
+        # Deferred until there's a visible user flow that needs them — see CLAUDE.md "App Store review notes":
+        #   NSMicrophoneUsageDescription
+        #   NSPhotoLibraryUsageDescription
+        #   NSLocationWhenInUseUsageDescription
+        #   NSContactsUsageDescription
         # ATS — allow non-HTTPS web content during development; native networking is unaffected.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInWebContent: true
@@ -72,10 +75,9 @@ targets:
           - CFBundleURLName: com.hermeswebui.HermesiOS.pairing
             CFBundleURLSchemes:
               - hermes
-        UIBackgroundModes:
-          - audio
-          - voip
-          - remote-notification
+        # No UIBackgroundModes declared in the first submission.
+        # voip and audio background modes get heavy reviewer scrutiny and are routinely rejected when not core to the app.
+        # Add background modes (and document the justification) in the same PR as the feature that needs them.
 
   HermesiOSTests:
     type: bundle.unit-test

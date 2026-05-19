@@ -131,6 +131,27 @@ The registry's job is to be the single place the JS bridge looks up capability h
 
 ---
 
+## App Store review notes — read before adding entitlements, plist keys, or capabilities
+
+App Review will reject submissions for several specific patterns. We trim the surface area to only what's actually used so reviews stay fast.
+
+**Permission strings:** Only declare an `NS*UsageDescription` in `project.yml` in the **same PR** that wires up the user-facing flow which triggers it. Declaring keys you don't use is flagged as "requesting permissions you don't use." Currently declared: `NSCameraUsageDescription` (QR pairing scanner), `NSFaceIDUsageDescription` (BiometricsCapability), `NSLocalNetworkUsageDescription` (Bonjour). Deferred: microphone, photo library, location, contacts.
+
+**High-scrutiny permissions** — get a second look before adding:
+
+- **Contacts (`NSContactsUsageDescription`)** — frequently rejected when the user flow doesn't make access obviously necessary. `ContactsCapability` exists in the codebase but is **not registered by default**; opt it in only with a concrete UI flow.
+- **Microphone, Photo Library, Location-Always, Health, Bluetooth (always-on)** — same caution.
+
+**Background modes:** No `UIBackgroundModes` are declared in the first submission. `voip` and `audio` get rejected when they're not core to the app's purpose. Add background modes — with reviewer-facing justification — only alongside the feature that needs them.
+
+**ATS (App Transport Security):** `NSAllowsArbitraryLoadsInWebContent` is set so the WKWebView can load non-HTTPS hermes-webui instances on a LAN. This is reviewable but generally accepted for browser-style apps; native networking is not exempted. Switch to HTTPS-everywhere before shipping when feasible.
+
+**Encryption (`ITSAppUsesNonExemptEncryption`):** WebSocket over TLS counts as standard encryption — declare `ITSAppUsesNonExemptEncryption=false` once we ship to TestFlight unless we add custom crypto.
+
+**Web content policy:** WKWebViews that load user-controlled URLs need to be presented as a clear browser/agent surface, not a wrapped third-party site. The settings screen exposing the target URL helps here.
+
+When in doubt, slim down. Removing a permission later costs nothing; getting rejected and re-submitting costs days.
+
 ## Common gotchas
 
 - **iOS Simulator and Bonjour** — works on real device + Mac on same WiFi; Simulator Bonjour is flaky. Test pairing on hardware.

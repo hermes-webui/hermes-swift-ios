@@ -23,12 +23,18 @@ public actor CapabilityRegistry {
         Array(capabilities.keys).sorted()
     }
 
-    /// Convenience: registers the default set shipped with the app.
-    /// Add new capabilities to this list and to `HermesCapabilities/<Name>/` together.
+    /// Capabilities auto-registered on launch.
+    ///
+    /// IMPORTANT for App Store review: only register capabilities whose permission strings are
+    /// declared in project.yml AND whose user-facing flow is implemented. Apple rejects apps
+    /// that request permissions they don't use, and scrutinizes high-risk surfaces (Contacts,
+    /// Microphone, Photo Library) very closely.
+    ///
+    /// Capabilities staged for later registration once their flows ship:
+    ///   - LocationCapability    (needs NSLocationWhenInUseUsageDescription + a visible flow)
+    ///   - ContactsCapability    (highest review risk — keep deferred until clearly justified)
     public func registerDefaults() {
-        register(CameraCapability())
-        register(LocationCapability())
-        register(ContactsCapability())
+        register(CameraCapability())            // QR scanner for pairing — clear justification
         register(NotificationsCapability())
         register(ShareSheetCapability())
         register(BiometricsCapability())

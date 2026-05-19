@@ -7,7 +7,8 @@ final class CapabilityRegistryTests: XCTestCase {
         let reg = CapabilityRegistry()
         await reg.registerDefaults()
         let names = await reg.allNames()
-        XCTAssertEqual(Set(names), Set(["camera", "location", "contacts", "notifications", "share", "biometrics"]))
+        // Defaults intentionally exclude Location and Contacts pending App Store review readiness — see CapabilityRegistry.swift.
+        XCTAssertEqual(Set(names), Set(["camera", "notifications", "share", "biometrics"]))
     }
 
     func testLookupReturnsRegisteredCapability() async {
