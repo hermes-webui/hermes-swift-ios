@@ -35,6 +35,10 @@ and adds a JavaScript bridge that gives the agent access to iPhone-native APIs
 (camera, biometrics, notifications, share sheet, clipboard, haptics, document picker,
 text-to-speech, QR generation).
 
+The recommended user setup is Tailscale on both the Mac (hosting the agent) and the
+iPhone, which gives the agent a stable, privately-routable hostname reachable from
+anywhere. The app itself is reachability-agnostic and accepts any URL the user enters.
+
 Native value over a web wrapper:
  - QR-based pairing with TLS leaf-cert fingerprint pinning (HermesCore.FingerprintPinner)
  - Keychain-backed endpoint storage with optional bearer-token injection

@@ -25,8 +25,12 @@ public struct AboutView: View {
                         sectionHeader("How you connect")
                         Text("Scan the QR shown by Hermes on your Mac, or paste your agent URL. The URL plus optional TLS fingerprint and bearer token are stored in the iOS Keychain. The app does not transmit your data anywhere except to the agent endpoint you configured.")
 
-                        sectionHeader("Reachability")
-                        Text("The iPhone reaches your agent over whatever network path you set up — Tailscale, public domain, LAN, ngrok, anything that resolves the URL you entered. Hermes does not operate any relay or coordination server of its own.")
+                        sectionHeader("Reachability — Tailscale recommended")
+                        Text("To reach your Mac from anywhere (cellular, hotel WiFi, etc.), install Tailscale on both your Mac and iPhone and use your Mac's tailnet hostname as the agent URL. Tailscale is free for personal use and gives you a stable address with zero port forwarding.")
+                        Text("Other setups work too — LAN-only, public domain with TLS, Cloudflare Tunnel, ngrok — the app accepts any URL. Hermes does not operate any relay or coordination server of its own.")
+                            .padding(.top, 4)
+                        Link("Get Tailscale", destination: URL(string: "https://tailscale.com/download")!)
+                            .padding(.top, 4)
 
                         sectionHeader("Privacy")
                         Text("Endpoint URLs, tokens, and fingerprints live in the iOS Keychain. No telemetry, no analytics, no third-party SDKs.")

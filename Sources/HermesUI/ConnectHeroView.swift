@@ -35,6 +35,12 @@ public struct ConnectHeroView: View {
                         .foregroundStyle(.white.opacity(0.85))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
+                    Text("Tip: install Tailscale on both devices to reach your Mac from anywhere — cellular, hotel WiFi, anywhere.")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.6))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                        .padding(.top, 4)
                 }
                 Spacer()
                 Button {

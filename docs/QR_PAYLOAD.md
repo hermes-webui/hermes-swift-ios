@@ -54,4 +54,6 @@ FingerprintPinner.fingerprint(ofDER: certDERData)
 
 ## Reachability — not this protocol's job
 
-The iPhone reaches `url` using whatever network path the user already has set up — Tailscale, public domain + Let's Encrypt, local LAN, ngrok, Cloudflare Tunnel, anything. This app does not operate any reachability infrastructure of its own. If hermes-agent is on a private network the iPhone can't reach, the connection fails the same way Safari would. Set up your reachability layer first; this app inherits it.
+The iPhone reaches `url` using whatever network path the user already has set up. **The recommended setup is Tailscale** on both the Mac and the iPhone — it gives the Mac a stable hostname (e.g. `hermes.tailnet.ts.net`) reachable from cellular and any WiFi without port forwarding or public DNS. The QR's `url` field is just the tailnet hostname.
+
+Other setups (public domain + Let's Encrypt, LAN-only, Cloudflare Tunnel, ngrok) work identically — the QR carries whatever URL is right for the user's setup. This app does not operate any reachability infrastructure of its own; if hermes-agent is on a private network the iPhone can't reach, the connection fails the same way Safari would.

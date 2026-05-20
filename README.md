@@ -6,7 +6,9 @@ Native iOS client for [Hermes Agent](https://github.com/NousResearch/hermes-agen
 
 ## How you connect
 
-**One QR. Two seconds.** This is the method.
+**Install [Tailscale](https://tailscale.com) on your Mac and iPhone. Scan one QR. Done.**
+
+That's the recommended path. Tailscale gives your Mac a stable hostname (e.g. `hermes.tailnet.ts.net`) reachable from cellular, hotel WiFi, anywhere — no port forwarding, no public DNS, no router config. The Mac's Hermes app generates the QR with that hostname; the iPhone scans it; the WKWebView opens the dashboard.
 
 - **On the Mac** — share the agent URL via the Mac app's QR (or paste the link).
 - **On the iPhone** — first launch is a full-screen *Scan to connect* button. Tap → camera → QR. Done.
@@ -15,20 +17,41 @@ The QR carries the agent URL plus (optionally) a TLS cert fingerprint to pin aga
 
 Re-connect or add another agent? Same flow, surfaced as *Add another Hermes* in Settings.
 
+> You don't *have* to use Tailscale — the app accepts any URL. See [Reachability](#reachability--not-in-this-app) below for the full set of options if you have a different setup.
+
 ## Reachability — not in this app
 
 The iPhone reaches the agent URL however the user already does. We do not run a relay, a coordination server, or any infrastructure for this. **Set up reachability once at the agent layer** and every Hermes client — Mac, iPhone, future iPad, future Android — inherits it.
 
-### Recommended options for users
+### Tailscale — the recommended setup
+
+This is the path we recommend, and it's the assumption the rest of the docs are written against. It's the only setup that gives you:
+
+- ✅ Works from cellular, hotel WiFi, anywhere
+- ✅ Zero port forwarding, zero public DNS
+- ✅ Free for personal use
+- ✅ Stable hostname (`hermes.<your-tailnet>.ts.net`) the QR can carry
+- ✅ End-to-end encrypted WireGuard tunnel underneath
+
+Steps:
+1. Install Tailscale on your Mac and iPhone (5 minutes; sign in with the same account on both)
+2. Note the Mac's tailnet hostname from the Tailscale menu bar — something like `studio.tailnet.ts.net`
+3. Run Hermes Agent on the Mac, point the Mac app at it locally
+4. In the Mac app, generate the iPhone connect QR using the tailnet hostname
+5. Scan from the iPhone — done
+
+### Other options that work
+
+The app accepts any URL, so you can skip Tailscale if you already have one of these set up:
 
 | Setup | When it fits | Difficulty |
 | --- | --- | --- |
-| **Tailscale** (recommended for off-LAN) | You want the agent reachable from cellular too, with zero port-forwarding | 5 min — install on Mac + iPhone + iPad |
+| **Tailscale** | Default; reach the agent from anywhere | 5 min, both devices |
 | LAN-only (`http://hermes.local:8787`) | Home use; phone and Mac on same WiFi | Trivial — works out of the box |
 | Public domain + Let's Encrypt | You run a dedicated server with a real DNS name | 1 hour, needs DNS |
 | Cloudflare Tunnel / ngrok / frp | Quick public exposure of a self-hosted agent without opening router ports | 10 min, needs a Cloudflare or ngrok account |
 
-We don't bundle or require any of these — the app accepts whatever URL you enter. Tailscale is highlighted because it's the lowest-friction "works from anywhere" answer on Apple devices.
+We don't bundle or require any of these — Tailscale is highlighted because it's the lowest-friction "works from anywhere" answer on Apple devices, and the path with the smallest blast radius (no machine becomes publicly addressable, no router config).
 
 ## What the JS bridge exposes
 

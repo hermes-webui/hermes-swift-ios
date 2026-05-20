@@ -11,7 +11,7 @@ A SwiftUI iOS app that loads a user-configured Hermes Agent URL in a `WKWebView`
 1. **iPhone-native capabilities surfaced into the web UI** — `WKScriptMessageHandler` JS bridge (`window.hermes.invoke(...)`). Camera, share sheet, biometrics, notifications today; more as the app grows.
 2. **A native-feeling onboarding + endpoint setup** — first launch is a scan-to-connect screen, paired endpoints persist in the Keychain, optional TLS leaf-cert pinning via QR-carried fingerprint.
 
-**This app does NOT** run a bridge protocol to the Mac, operate any relay or coordination server, or solve cross-network reachability. The iPhone reaches the agent URL via whatever path the user already has set up (Tailscale, public domain, LAN, etc.).
+**This app does NOT** run a bridge protocol to the Mac, operate any relay or coordination server, or solve cross-network reachability. The iPhone reaches the agent URL via whatever path the user already has set up — the documented and recommended path is **Tailscale on both devices**, but the app accepts any URL (LAN, public domain, Cloudflare Tunnel, ngrok).
 
 **Language:** Swift 5.9+
 **Min target:** iOS 16

@@ -29,7 +29,7 @@ public struct EndpointSetupView: View {
                     }
                 }
 
-                Section("Enter URL manually") {
+                Section {
                     TextField("Display name (e.g. Home)", text: $manualName)
                         .textInputAutocapitalization(.words)
                     TextField("https://hermes.tailnet.ts.net", text: $manualURL)
@@ -41,6 +41,10 @@ public struct EndpointSetupView: View {
                         Task { await saveManual() }
                     }
                     .disabled(manualURL.isEmpty || manualName.isEmpty || working)
+                } header: {
+                    Text("Enter URL manually")
+                } footer: {
+                    Text("Recommended: install Tailscale on your Mac and iPhone, then enter your Mac's tailnet hostname (e.g. `studio.tailnet.ts.net`). LAN and public-domain URLs also work.")
                 }
 
                 if let error {
