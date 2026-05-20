@@ -30,8 +30,6 @@ targets:
       - package: HermesiOSLib
         product: HermesWebView
       - package: HermesiOSLib
-        product: HermesBridge
-      - package: HermesiOSLib
         product: HermesCapabilities
       - package: HermesiOSLib
         product: HermesUI
@@ -43,7 +41,6 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
-        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
     info:
       path: Sources/HermesApp/Info.plist
       properties:
@@ -53,31 +50,18 @@ targets:
         LSRequiresIPhoneOS: true
         UILaunchScreen:
           UIColorName: ""
-        # Bonjour service discovery for the Mac BridgeServer
-        NSBonjourServices:
-          - _hermes._tcp
-        NSLocalNetworkUsageDescription: "Hermes uses your local network to discover and securely connect to a Mac running Hermes Agent."
-        # Capability permission strings — only declare a key when there is an actual user-facing code path that requests it.
-        # Apple's review flags apps that declare permissions they never use ("requesting permissions you don't use") and
-        # heavily scrutinizes high-risk permissions like Contacts. Add a key here in the SAME PR that wires up the flow.
-        NSCameraUsageDescription: "Hermes uses the camera to scan the pairing QR code shown on your Mac."
+        # Permission strings — only what real flows actually exercise.
+        NSCameraUsageDescription: "Hermes uses the camera to scan the QR code that connects you to your Hermes Agent."
         NSFaceIDUsageDescription: "Hermes uses Face ID to authorize sensitive agent actions on this device."
-        # Deferred until there's a visible user flow that needs them — see CLAUDE.md "App Store review notes":
-        #   NSMicrophoneUsageDescription
-        #   NSPhotoLibraryUsageDescription
-        #   NSLocationWhenInUseUsageDescription
-        #   NSContactsUsageDescription
-        # ATS — allow non-HTTPS web content during development; native networking is unaffected.
+        # ATS: allow non-HTTPS in WebView content for LAN dev (Tailscale magic-DNS hostnames are HTTPS).
+        # Native networking is unaffected.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInWebContent: true
-        # Custom URL scheme for pairing fallback (hermes://pair?host=...&token=...)
+        # Custom URL scheme for endpoint-share fallback (hermes://agent?payload=<base64>).
         CFBundleURLTypes:
-          - CFBundleURLName: com.hermeswebui.HermesiOS.pairing
+          - CFBundleURLName: com.hermeswebui.HermesiOS.endpoint
             CFBundleURLSchemes:
               - hermes
-        # No UIBackgroundModes declared in the first submission.
-        # voip and audio background modes get heavy reviewer scrutiny and are routinely rejected when not core to the app.
-        # Add background modes (and document the justification) in the same PR as the feature that needs them.
 
   HermesiOSTests:
     type: bundle.unit-test
@@ -87,8 +71,6 @@ targets:
     dependencies:
       - target: HermesiOS
       - package: HermesiOSLib
-        product: HermesBridge
+        product: HermesCore
       - package: HermesiOSLib
         product: HermesCapabilities
-      - package: HermesiOSLib
-        product: HermesCore
