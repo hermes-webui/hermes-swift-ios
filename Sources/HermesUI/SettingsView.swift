@@ -1,86 +1,88 @@
 import SwiftUI
-import HermesBridge
 import HermesCore
 
 public struct SettingsView: View {
-    @ObservedObject var settings: AppSettings
-    @ObservedObject var session: SessionManager
-    @State private var showingPairing = false
-    @State private var urlInput: String = ""
+    @ObservedObject var store: EndpointStore
+    @State private var showingSetup = false
+    @State private var showingAbout = false
 
-    public init(settings: AppSettings = .shared, session: SessionManager = .shared) {
-        self.settings = settings
-        self.session = session
-        self._urlInput = State(initialValue: settings.webViewURL.absoluteString)
-    }
+    public init(store: EndpointStore = .shared) { self.store = store }
 
     public var body: some View {
         NavigationStack {
             Form {
-                Section("Hermes Web UI") {
-                    TextField("URL", text: $urlInput)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onSubmit { applyURL() }
-                    Button("Apply") { applyURL() }
+                // Connect action — first section, prominent. Always available.
+                Section {
+                    Button {
+                        showingSetup = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "qrcode.viewfinder").font(.title2)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(store.endpoints.isEmpty ? "Connect to Hermes" : "Add another Hermes")
+                                    .font(.headline)
+                                Text("Scan the code shown by Hermes on your Mac")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
                 }
 
-                Section("Paired Macs") {
-                    if session.pairedDevices.isEmpty {
-                        Text("No Macs paired").foregroundStyle(.secondary)
-                    } else {
-                        ForEach(session.pairedDevices, id: \.id) { device in
+                if !store.endpoints.isEmpty {
+                    Section("Configured agents") {
+                        ForEach(store.endpoints) { endpoint in
                             HStack {
                                 VStack(alignment: .leading) {
-                                    Text(device.displayName)
-                                    Text("\(device.host):\(device.port)")
+                                    HStack(spacing: 6) {
+                                        Text(endpoint.displayName)
+                                        if endpoint.leafCertFingerprint != nil {
+                                            Image(systemName: "lock.shield.fill")
+                                                .foregroundStyle(.green)
+                                                .help("TLS cert pinned")
+                                        }
+                                    }
+                                    Text(endpoint.url.absoluteString)
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
                                 }
                                 Spacer()
-                                Button("Connect") {
-                                    Task { await session.connect(to: device) }
+                                if store.activeEndpoint?.url == endpoint.url {
+                                    Text("Active").font(.caption).foregroundStyle(.green)
+                                } else {
+                                    Button("Use") {
+                                        try? store.setActive(endpoint)
+                                    }
+                                    .buttonStyle(.bordered)
                                 }
-                                .buttonStyle(.bordered)
                             }
                         }
                         .onDelete { idxs in
                             for i in idxs {
-                                try? session.remove(id: session.pairedDevices[i].id)
+                                try? store.remove(store.endpoints[i])
                             }
                         }
                     }
-                    Button("Pair a new Mac") { showingPairing = true }
                 }
-
-                Section("Transport") {
-                    Picker("Preference", selection: $settings.preferredTransport) {
-                        ForEach(TransportPreference.allCases) { Text($0.displayName).tag($0) }
+            }
+                Section {
+                    Button {
+                        showingAbout = true
+                    } label: {
+                        Label("About Hermes", systemImage: "info.circle")
                     }
-                    TextField("Relay base URL", text: Binding(
-                        get: { settings.relayBaseURL.absoluteString },
-                        set: { if let u = URL(string: $0) { settings.relayBaseURL = u } }
-                    ))
-                    .keyboardType(.URL)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                }
-
-                Section("Connection") {
-                    ConnectionStatusView(session: session)
-                    if session.activeClient != nil {
-                        Button("Disconnect") { Task { await session.disconnect() } }
-                    }
+                    .buttonStyle(.plain)
                 }
             }
             .navigationTitle("Settings")
-            .sheet(isPresented: $showingPairing) { PairingView(session: session) }
+            .sheet(isPresented: $showingSetup) { EndpointSetupView(store: store) }
+            .sheet(isPresented: $showingAbout) { AboutView() }
         }
-    }
-
-    private func applyURL() {
-        guard let url = URL(string: urlInput) else { return }
-        settings.webViewURL = url
     }
 }

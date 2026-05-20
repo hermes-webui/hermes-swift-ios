@@ -2,57 +2,142 @@
 
 > The best way to use Hermes from your iPhone.
 
-A native iOS client for [Hermes Agent](https://github.com/NousResearch/hermes-agent) — built around the same WebKit shell pattern as [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac), with a bidirectional bridge that lets the iPhone discover and control a Hermes instance running on your Mac, plus iPhone-native capabilities (camera, notifications, share sheet, biometrics) surfaced into the same web UI.
+Native iOS client for [Hermes Agent](https://github.com/NousResearch/hermes-agent). The iPhone embeds the same WKWebView dashboard the [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac) app shows — pointed at your agent's URL, however you already reach it (Tailscale, public domain, local LAN) — with a JavaScript bridge that surfaces iPhone-native capabilities (camera, notifications, share sheet, biometrics) into the dashboard so the agent can use them.
 
-**Pair once with a QR code, then talk over TLS:** the Mac displays a QR encoding its host, port, leaf-cert fingerprint, and a single-use bearer token. The iPhone scans, opens a pinned `wss://` connection, and on first successful handshake the Mac rotates the token — so a stolen QR is useless after the legitimate device has connected once. No SSH, no shell, no general-purpose remote-access surface.
+## How you connect
+
+**Install [Tailscale](https://tailscale.com) on your Mac and iPhone. Scan one QR. Done.**
+
+That's the recommended path. Tailscale gives your Mac a stable hostname (e.g. `hermes.tailnet.ts.net`) reachable from cellular, hotel WiFi, anywhere — no port forwarding, no public DNS, no router config. The Mac's Hermes app generates the QR with that hostname; the iPhone scans it; the WKWebView opens the dashboard.
+
+- **On the Mac** — share the agent URL via the Mac app's QR (or paste the link).
+- **On the iPhone** — first launch is a full-screen *Scan to connect* button. Tap → camera → QR. Done.
+
+The QR carries the agent URL plus (optionally) a TLS cert fingerprint to pin against. The iPhone stores both in the Keychain and the WKWebView loads the dashboard. Same experience the Mac gives you, just on your phone.
+
+Re-connect or add another agent? Same flow, surfaced as *Add another Hermes* in Settings.
+
+> You don't *have* to use Tailscale — the app accepts any URL. See [Reachability](#reachability--not-in-this-app) below for the full set of options if you have a different setup.
+
+## Reachability — not in this app
+
+The iPhone reaches the agent URL however the user already does. We do not run a relay, a coordination server, or any infrastructure for this. **Set up reachability once at the agent layer** and every Hermes client — Mac, iPhone, future iPad, future Android — inherits it.
+
+### Tailscale — the recommended setup
+
+This is the path we recommend, and it's the assumption the rest of the docs are written against. It's the only setup that gives you:
+
+- ✅ Works from cellular, hotel WiFi, anywhere
+- ✅ Zero port forwarding, zero public DNS
+- ✅ Free for personal use
+- ✅ Stable hostname (`hermes.<your-tailnet>.ts.net`) the QR can carry
+- ✅ End-to-end encrypted WireGuard tunnel underneath
+
+Steps:
+1. Install Tailscale on your Mac and iPhone (5 minutes; sign in with the same account on both)
+2. Note the Mac's tailnet hostname from the Tailscale menu bar — something like `studio.tailnet.ts.net`
+3. Run Hermes Agent on the Mac, point the Mac app at it locally
+4. In the Mac app, generate the iPhone connect QR using the tailnet hostname
+5. Scan from the iPhone — done
+
+### Other options that work
+
+The app accepts any URL, so you can skip Tailscale if you already have one of these set up:
+
+| Setup | When it fits | Difficulty |
+| --- | --- | --- |
+| **Tailscale** | Default; reach the agent from anywhere | 5 min, both devices |
+| LAN-only (`http://hermes.local:8787`) | Home use; phone and Mac on same WiFi | Trivial — works out of the box |
+| Public domain + Let's Encrypt | You run a dedicated server with a real DNS name | 1 hour, needs DNS |
+| Cloudflare Tunnel / ngrok / frp | Quick public exposure of a self-hosted agent without opening router ports | 10 min, needs a Cloudflare or ngrok account |
+
+We don't bundle or require any of these — Tailscale is highlighted because it's the lowest-friction "works from anywhere" answer on Apple devices, and the path with the smallest blast radius (no machine becomes publicly addressable, no router config).
+
+## What the JS bridge exposes
+
+Inside the WKWebView, hermes-agent's web code can call:
+
+```js
+// Permission-gated
+await window.hermes.invoke("capability.camera.scanQR")
+await window.hermes.invoke("capability.biometrics.authenticate", { reason: "Confirm" })
+await window.hermes.invoke("capability.notifications.schedule", { title: "Done", body: "Run finished" })
+
+// No permission required
+await window.hermes.invoke("capability.clipboard.write", { value: "hello" })
+await window.hermes.invoke("capability.haptics.impact", { style: "medium" })
+await window.hermes.invoke("capability.deviceInfo.get")
+await window.hermes.invoke("capability.openURL.open", { url: "tel:+15555550100" })
+await window.hermes.invoke("capability.appBadge.set", { count: 3 })
+await window.hermes.invoke("capability.speech.speak", { text: "Hello" })
+await window.hermes.invoke("capability.qrGenerator.generate", { payload: "..." })
+await window.hermes.invoke("capability.documentPicker.pick", { allowMultiple: false })
+await window.hermes.invoke("capability.share.present", { text: "share me" })
+await window.hermes.invoke("meta.info") // { platform, appVersion }
+```
+
+### Capability surface at v0.1
+
+| Capability | Permission | Methods |
+| --- | --- | --- |
+| `camera`         | `NSCameraUsageDescription` | `scanQR`, `takePhoto` (TODO) |
+| `biometrics`     | `NSFaceIDUsageDescription` | `authenticate` |
+| `notifications`  | runtime prompt | `schedule`, `cancel` |
+| `share`          | none | `present` |
+| `clipboard`      | none | `read`, `write`, `clear` |
+| `haptics`        | none | `impact`, `notification`, `selection` |
+| `deviceInfo`     | none | `get` |
+| `openURL`        | none | `open`, `canOpen` |
+| `appBadge`       | none | `set`, `clear` |
+| `speech`         | none (TTS only) | `speak`, `stop`, `voices` |
+| `qrGenerator`    | none | `generate` |
+| `documentPicker` | none | `pick` |
+
+**Held back until a clear user flow justifies them** — not in the binary, no plist keys declared: `location`, `contacts`, plus future `photos`, `calendar`, `reminders`, `microphone`, `speechRecognition`, `health`. Each costs App Store review scrutiny — and merely importing those frameworks can trigger Apple's privacy-manifest scanning — so we keep the binary clean until there's a real flow. Resurrect from git history when needed.
+
+Adding a capability = a folder under `Sources/HermesCapabilities/` + a `register` line + (if permission-gated) a usage-description key in `project.yml` + (if it touches a required-reason API) an entry in `Sources/HermesApp/PrivacyInfo.xcprivacy`. See [CLAUDE.md](CLAUDE.md) and [docs/APP_STORE_SUBMISSION.md](docs/APP_STORE_SUBMISSION.md).
 
 ## Architecture at a glance
 
 ```
-┌──────────────────────────── iPhone ────────────────────────────┐
-│                                                                │
-│  ┌──────────────┐    ┌─────────────────┐    ┌──────────────┐   │
-│  │ HermesApp    │───▶│ HermesWebView   │◀──▶│ JSBridge     │   │
-│  │ (SwiftUI)    │    │ (WKWebView)     │    │ window.hermes│   │
-│  └──────┬───────┘    └─────────────────┘    └──────┬───────┘   │
-│         │                                          │           │
-│  ┌──────▼─────────┐                       ┌────────▼────────┐  │
-│  │ HermesBridge   │                       │ HermesCapab.    │  │
-│  │ Client         │                       │ Camera/Loc/...  │  │
-│  └──────┬─────────┘                       └─────────────────┘  │
-│         │                                                      │
-└─────────┼──────────────────────────────────────────────────────┘
-          │
-   ┌──────┴──────┐
-   │  LAN: Bonjour + WebSocket
-   │  Cloud: Relay (off-LAN fallback)
-   ▼
-┌─────────────── Mac (hermes-swift-mac) ─────────────────────────┐
-│ BridgeServer (future PR) ──▶ hermes-webui backend              │
-└────────────────────────────────────────────────────────────────┘
+┌──────────────────── iPhone ────────────────────┐
+│                                                │
+│  ┌────────────┐    ┌─────────────────────────┐ │
+│  │ HermesApp  │───▶│ HermesWebView (WKWebV.) │◀┐
+│  │ (SwiftUI)  │    └────────┬────────────────┘ │
+│  └────────────┘             │ JS bridge        │
+│                             ▼                  │
+│                    ┌────────────────────┐      │
+│                    │ HermesCapabilities │      │
+│                    │  Camera/Notif/...  │      │
+│                    └────────────────────┘      │
+└────────────────────┬───────────────────────────┘
+                     │  reaches agent URL via
+                     │  user's existing network
+                     ▼
+              hermes-agent dashboard
+              (same target the Mac app uses)
 ```
 
 ## Repo structure
 
 ```
-HermesiOS.xcodeproj/                  # generated by XcodeGen (run `xcodegen`)
-project.yml                           # XcodeGen spec — source of truth
-Package.swift                         # SPM library targets
+HermesiOS.xcodeproj/             # generated by XcodeGen
+project.yml                      # XcodeGen spec — source of truth
+Package.swift                    # SPM library targets
 Sources/
-  HermesApp/                          # @main, SwiftUI root + coordinator
-  HermesWebView/                      # WKWebView wrapper + JS bridge
-  HermesBridge/                       # iOS ⇄ Mac control plane
-    Transport/                        # Bonjour, WebSocket, Relay
-    Protocol/                         # Message envelope + typed commands
-    Pairing/                          # QR pairing + Keychain-backed device store
-  HermesCapabilities/                 # iPhone-native APIs exposed to JS + native UI
-    Camera/  Location/  Contacts/
-    Notifications/  ShareSheet/  Biometrics/
-  HermesCore/                         # Config, Keychain, logging
-  HermesUI/                           # Settings, pairing, connection-status SwiftUI views
+  HermesApp/                     # @main, SwiftUI root + coordinator
+  HermesWebView/                 # WKWebView wrapper + JS bridge + nav delegate
+  HermesCapabilities/            # iPhone-native APIs surfaced to JS
+    Camera/  Biometrics/  Notifications/  ShareSheet/
+    Clipboard/  Haptics/  DeviceInfo/  OpenURL/
+    AppBadge/  SpeechSynthesis/  QRGenerator/  DocumentPicker/
+  HermesCore/                    # AppSettings, Keychain, Logger,
+                                 # HermesEndpoint, EndpointStore,
+                                 # EndpointQR, FingerprintPinner
+  HermesUI/                      # ConnectHero, EndpointSetup, Settings
 Tests/HermesiOSTests/
-docs/
-  BRIDGE_PROTOCOL.md                  # JSON-over-WebSocket message contract
+docs/QR_PAYLOAD.md               # wire format of the connect QR
 ```
 
 ## Build
@@ -60,51 +145,25 @@ docs/
 Requires Xcode 15+, Swift 5.9+, iOS 16+ target.
 
 ```bash
-brew install xcodegen          # one-time
-xcodegen                       # materialize HermesiOS.xcodeproj from project.yml
-open HermesiOS.xcodeproj       # build & run from Xcode
+brew install xcodegen           # one-time
+xcodegen                        # materialize HermesiOS.xcodeproj
+open HermesiOS.xcodeproj
 ```
 
-For library code only:
-
-```bash
-swift build
-swift test
-```
-
-## Pairing flow
-
-1. **On the Mac** *(requires hermes-swift-mac BridgeServer, in flight)*: open Hermes → Preferences → Pair an iPhone → a QR appears containing host, port, leaf-cert fingerprint, and a single-use bearer token.
-2. **On the iPhone**: open Settings → "Pair a new Mac" → tap **Open camera** → align the QR inside the frame.
-3. The iPhone decodes the payload, persists it to the Keychain (`PairedDevice` in [`HermesBridge/Pairing/PairedDevice.swift`](Sources/HermesBridge/Pairing/PairedDevice.swift)), and opens a pinned `wss://` connection.
-4. On the first successful handshake, the Mac sends `authRotated` with a fresh token; the iPhone replaces the QR-baked token in the Keychain.
-5. Subsequent launches reconnect automatically using the rotated token.
-
-Fallbacks:
-- **`hermes://pair?payload=<base64>`** deep link — same payload format, useful when the QR is on the same device.
-- **Manual paste** — fallback text field in the pairing sheet accepts `hermes:pair:v1:<base64>` directly.
+For library code only: `swift build && swift test`.
 
 ## Security model
 
 | Property | Mechanism |
 | --- | --- |
-| Confidentiality | `wss://` (TLS) — `ws://` permitted for local dev only, logs a warning |
-| Server identity | SHA-256 leaf-cert fingerprint pinning — `FingerprintPinner` in [`HermesBridge/Transport/FingerprintPinner.swift`](Sources/HermesBridge/Transport/FingerprintPinner.swift) |
-| Client auth | Bearer token in `Authorization` header, rotated once after pairing |
-| Token storage | Keychain, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` |
-| Protocol versioning | Every frame carries `protocolVersion`; mismatches reject with `unsupported_version` |
-
-See [docs/BRIDGE_PROTOCOL.md](docs/BRIDGE_PROTOCOL.md) for the full message contract.
+| Confidentiality | HTTPS to hermes-agent; `http://` permitted for dev |
+| Server identity | Optional SHA-256 leaf-cert pinning enforced by `FingerprintPinner` in `WKNavigationDelegate` |
+| Endpoint storage | Keychain (`AfterFirstUnlockThisDeviceOnly`) — URL, fingerprint, optional bearer token all in one blob |
+| Permissions | Each `HermesCapability` permission-gates its own API; only `NSCameraUsageDescription` and `NSFaceIDUsageDescription` declared at v0.1 |
 
 ## Status
 
-Initial scaffolding. The iOS side is wired end-to-end (camera scanner, pairing, Keychain persistence, transports, fingerprint pinner, token-rotation handler). The Mac-side `BridgeServer` it talks to is a separate PR on [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac) — until that lands, the iPhone can complete pairing flows against the manual-paste fallback but the WebSocket connect will fail.
-
-## Related
-
-- [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac) — macOS client
-- [hermes-android](https://github.com/hermes-webui/hermes-android) — Android client (placeholder)
-- [hermes-desktop](https://github.com/hermes-webui/hermes-desktop) — cross-platform desktop (placeholder)
+Initial scaffold. Camera scanner, QR endpoint setup, Keychain-backed endpoint store, TLS pinning in the WKWebView's navigation delegate, JS bridge with capability routing — all wired. Mac-side QR generator is a separate small change on [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac).
 
 ## License
 
