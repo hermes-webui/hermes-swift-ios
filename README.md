@@ -17,7 +17,18 @@ Re-connect or add another agent? Same flow, surfaced as *Add another Hermes* in 
 
 ## Reachability — not in this app
 
-The iPhone reaches the agent URL however the user already does. We do not run a relay, a coordination server, or any infrastructure for this. **You set up reachability once at the agent layer** (Tailscale is the easy default) and every Hermes client — Mac, iPhone, future iPad, future Android — inherits it for free.
+The iPhone reaches the agent URL however the user already does. We do not run a relay, a coordination server, or any infrastructure for this. **Set up reachability once at the agent layer** and every Hermes client — Mac, iPhone, future iPad, future Android — inherits it.
+
+### Recommended options for users
+
+| Setup | When it fits | Difficulty |
+| --- | --- | --- |
+| **Tailscale** (recommended for off-LAN) | You want the agent reachable from cellular too, with zero port-forwarding | 5 min — install on Mac + iPhone + iPad |
+| LAN-only (`http://hermes.local:8787`) | Home use; phone and Mac on same WiFi | Trivial — works out of the box |
+| Public domain + Let's Encrypt | You run a dedicated server with a real DNS name | 1 hour, needs DNS |
+| Cloudflare Tunnel / ngrok / frp | Quick public exposure of a self-hosted agent without opening router ports | 10 min, needs a Cloudflare or ngrok account |
+
+We don't bundle or require any of these — the app accepts whatever URL you enter. Tailscale is highlighted because it's the lowest-friction "works from anywhere" answer on Apple devices.
 
 ## What the JS bridge exposes
 
@@ -59,9 +70,9 @@ await window.hermes.invoke("meta.info") // { platform, appVersion }
 | `qrGenerator`    | none | `generate` |
 | `documentPicker` | none | `pick` |
 
-**Held back until a clear user flow justifies them** — kept in tree, not auto-registered, no plist key declared: `location`, `contacts`, plus future `photos`, `calendar`, `reminders`, `microphone`, `speechRecognition`, `health`. Each costs App Store review scrutiny we don't pay until needed.
+**Held back until a clear user flow justifies them** — not in the binary, no plist keys declared: `location`, `contacts`, plus future `photos`, `calendar`, `reminders`, `microphone`, `speechRecognition`, `health`. Each costs App Store review scrutiny — and merely importing those frameworks can trigger Apple's privacy-manifest scanning — so we keep the binary clean until there's a real flow. Resurrect from git history when needed.
 
-Adding a capability = a folder under `Sources/HermesCapabilities/` + a `register` line + (if permission-gated) a usage-description key in `project.yml`. See [CLAUDE.md](CLAUDE.md).
+Adding a capability = a folder under `Sources/HermesCapabilities/` + a `register` line + (if permission-gated) a usage-description key in `project.yml` + (if it touches a required-reason API) an entry in `Sources/HermesApp/PrivacyInfo.xcprivacy`. See [CLAUDE.md](CLAUDE.md) and [docs/APP_STORE_SUBMISSION.md](docs/APP_STORE_SUBMISSION.md).
 
 ## Architecture at a glance
 
@@ -98,7 +109,6 @@ Sources/
     Camera/  Biometrics/  Notifications/  ShareSheet/
     Clipboard/  Haptics/  DeviceInfo/  OpenURL/
     AppBadge/  SpeechSynthesis/  QRGenerator/  DocumentPicker/
-    Location/  Contacts/         # in tree, not auto-registered
   HermesCore/                    # AppSettings, Keychain, Logger,
                                  # HermesEndpoint, EndpointStore,
                                  # EndpointQR, FingerprintPinner

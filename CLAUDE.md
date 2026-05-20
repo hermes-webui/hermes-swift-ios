@@ -119,13 +119,11 @@ The registry's job is to be the single place the JS bridge looks up capability h
 Permission-gated: `camera` (`NSCameraUsageDescription`), `biometrics` (`NSFaceIDUsageDescription`), `notifications` (runtime prompt).
 No-permission utilities: `share`, `clipboard`, `haptics`, `deviceInfo`, `openURL`, `appBadge`, `speech` (TTS), `qrGenerator`, `documentPicker`.
 
-### In tree but NOT auto-registered
+### Deliberately NOT in the binary
 
-`location`, `contacts`. Both exist as code but are intentionally excluded from `registerDefaults()` because:
-- `contacts` is one of Apple's highest-scrutiny permissions; gets rejected when the user flow doesn't make access obviously necessary.
-- `location` needs `NSLocationWhenInUseUsageDescription` + a visible flow to be reviewable.
+`LocationCapability` and `ContactsCapability` were removed entirely (not just deregistered). Reason: Apple's privacy-manifest scanning flags apps that import `CoreLocation` / `Contacts` without matching usage descriptions. Keeping unused code that touches those frameworks pays App Store review tax for no benefit. Resurrect from git history when a concrete user-facing flow needs them, in the same PR that adds the matching `NS*UsageDescription` to `project.yml` AND adds the matching entry to `PrivacyInfo.xcprivacy`.
 
-When a feature genuinely needs one of these, register it in the same PR that ships the user-facing flow AND adds the matching plist key. Never declare the key without the flow.
+Same applies to future `photos`, `calendar`, `reminders`, `microphone`, `speechRecognition`, `health` — never check in the framework-using code until the flow that exercises it ships in the same PR.
 
 ---
 

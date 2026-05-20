@@ -37,7 +37,7 @@ let package = Package(
             name: "HermesApp",
             dependencies: ["HermesCore", "HermesCapabilities", "HermesWebView", "HermesUI"],
             path: "Sources/HermesApp",
-            exclude: ["Info.plist"]
+            exclude: ["Info.plist", "PrivacyInfo.xcprivacy"]
         ),
         .testTarget(
             name: "HermesiOSTests",

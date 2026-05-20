@@ -28,11 +28,10 @@ public actor CapabilityRegistry {
     /// IMPORTANT for App Store review: only register capabilities whose permission strings are
     /// declared in project.yml AND whose user-facing flow is implemented. Apple rejects apps
     /// that request permissions they don't use, and scrutinizes high-risk surfaces (Contacts,
-    /// Microphone, Photo Library) very closely.
-    ///
-    /// Capabilities staged for later registration once their flows ship:
-    ///   - LocationCapability    (needs NSLocationWhenInUseUsageDescription + a visible flow)
-    ///   - ContactsCapability    (highest review risk — keep deferred until clearly justified)
+    /// Microphone, Photo Library) very closely. Importing those frameworks but never invoking
+    /// them can also trigger Apple's automated privacy-manifest warnings — we deleted the
+    /// LocationCapability and ContactsCapability files entirely rather than keeping dead code.
+    /// Resurrect from git history if/when a real flow needs them.
     public func registerDefaults() {
         // Permission-gated (declared in project.yml)
         register(CameraCapability())            // NSCameraUsageDescription

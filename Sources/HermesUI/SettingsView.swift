@@ -4,6 +4,7 @@ import HermesCore
 public struct SettingsView: View {
     @ObservedObject var store: EndpointStore
     @State private var showingSetup = false
+    @State private var showingAbout = false
 
     public init(store: EndpointStore = .shared) { self.store = store }
 
@@ -70,8 +71,18 @@ public struct SettingsView: View {
                     }
                 }
             }
+                Section {
+                    Button {
+                        showingAbout = true
+                    } label: {
+                        Label("About Hermes", systemImage: "info.circle")
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
             .navigationTitle("Settings")
             .sheet(isPresented: $showingSetup) { EndpointSetupView(store: store) }
+            .sheet(isPresented: $showingAbout) { AboutView() }
         }
     }
 }

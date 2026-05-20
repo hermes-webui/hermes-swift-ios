@@ -24,6 +24,8 @@ targets:
     platform: iOS
     sources:
       - path: Sources/HermesApp
+      - path: Sources/HermesApp/PrivacyInfo.xcprivacy
+        buildPhase: resources
     dependencies:
       - package: HermesiOSLib
         product: HermesApp
@@ -48,6 +50,10 @@ targets:
         CFBundleShortVersionString: "0.1.0"
         CFBundleVersion: "1"
         LSRequiresIPhoneOS: true
+        # Encryption export classification — we use standard TLS only (URLSession + WKWebView),
+        # which is exempt under "uses or accesses only exempt cryptography." Declaring false here
+        # suppresses the TestFlight encryption-classification prompt on every upload.
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen:
           UIColorName: ""
         # Permission strings — only what real flows actually exercise.
