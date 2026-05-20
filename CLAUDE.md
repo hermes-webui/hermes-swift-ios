@@ -108,11 +108,24 @@ Every capability has:
 
 1. A folder under `Sources/HermesCapabilities/<Name>/`
 2. A type conforming to `Capability` (`name`, `permissionStatus`, `requestPermission`, `invoke(method:params:)`)
-3. A matching `NS*UsageDescription` entry in `project.yml`
+3. (Permission-gated only) A matching `NS*UsageDescription` entry in `project.yml`
 4. Registration in `CapabilityRegistry.registerDefaults()` — lazy, no permission prompts on registration
 5. A test in `Tests/HermesiOSTests/Capabilities/`
 
 The registry's job is to be the single place the JS bridge looks up capability handlers. If you add a capability without registering it, the JS bridge will reject calls with `unknown capability`.
+
+### Auto-registered at v0.1
+
+Permission-gated: `camera` (`NSCameraUsageDescription`), `biometrics` (`NSFaceIDUsageDescription`), `notifications` (runtime prompt).
+No-permission utilities: `share`, `clipboard`, `haptics`, `deviceInfo`, `openURL`, `appBadge`, `speech` (TTS), `qrGenerator`, `documentPicker`.
+
+### In tree but NOT auto-registered
+
+`location`, `contacts`. Both exist as code but are intentionally excluded from `registerDefaults()` because:
+- `contacts` is one of Apple's highest-scrutiny permissions; gets rejected when the user flow doesn't make access obviously necessary.
+- `location` needs `NSLocationWhenInUseUsageDescription` + a visible flow to be reviewable.
+
+When a feature genuinely needs one of these, register it in the same PR that ships the user-facing flow AND adds the matching plist key. Never declare the key without the flow.
 
 ---
 

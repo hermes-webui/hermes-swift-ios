@@ -34,9 +34,19 @@ public actor CapabilityRegistry {
     ///   - LocationCapability    (needs NSLocationWhenInUseUsageDescription + a visible flow)
     ///   - ContactsCapability    (highest review risk — keep deferred until clearly justified)
     public func registerDefaults() {
-        register(CameraCapability())            // QR scanner for pairing — clear justification
-        register(NotificationsCapability())
+        // Permission-gated (declared in project.yml)
+        register(CameraCapability())            // NSCameraUsageDescription
+        register(BiometricsCapability())        // NSFaceIDUsageDescription
+        register(NotificationsCapability())     // requested at runtime
+        // No-permission utility capabilities — safe to ship at v0.1.
         register(ShareSheetCapability())
-        register(BiometricsCapability())
+        register(ClipboardCapability())
+        register(HapticsCapability())
+        register(DeviceInfoCapability())
+        register(OpenURLCapability())
+        register(AppBadgeCapability())
+        register(SpeechSynthesisCapability())
+        register(QRGeneratorCapability())
+        register(DocumentPickerCapability())
     }
 }

@@ -24,12 +24,44 @@ The iPhone reaches the agent URL however the user already does. We do not run a 
 Inside the WKWebView, hermes-agent's web code can call:
 
 ```js
-const photo = await window.hermes.invoke("capability.camera.scanQR");
-const ok    = await window.hermes.invoke("capability.biometrics.authenticate", { reason: "Confirm" });
-const me    = await window.hermes.invoke("meta.info"); // { platform, appVersion }
+// Permission-gated
+await window.hermes.invoke("capability.camera.scanQR")
+await window.hermes.invoke("capability.biometrics.authenticate", { reason: "Confirm" })
+await window.hermes.invoke("capability.notifications.schedule", { title: "Done", body: "Run finished" })
+
+// No permission required
+await window.hermes.invoke("capability.clipboard.write", { value: "hello" })
+await window.hermes.invoke("capability.haptics.impact", { style: "medium" })
+await window.hermes.invoke("capability.deviceInfo.get")
+await window.hermes.invoke("capability.openURL.open", { url: "tel:+15555550100" })
+await window.hermes.invoke("capability.appBadge.set", { count: 3 })
+await window.hermes.invoke("capability.speech.speak", { text: "Hello" })
+await window.hermes.invoke("capability.qrGenerator.generate", { payload: "..." })
+await window.hermes.invoke("capability.documentPicker.pick", { allowMultiple: false })
+await window.hermes.invoke("capability.share.present", { text: "share me" })
+await window.hermes.invoke("meta.info") // { platform, appVersion }
 ```
 
-Available capabilities at v0.1: camera (QR scan today; photo capture TODO), notifications, share sheet, biometrics. Adding a capability means a folder under `Sources/HermesCapabilities/` + a registry entry + a usage-description key — see [CLAUDE.md](CLAUDE.md).
+### Capability surface at v0.1
+
+| Capability | Permission | Methods |
+| --- | --- | --- |
+| `camera`         | `NSCameraUsageDescription` | `scanQR`, `takePhoto` (TODO) |
+| `biometrics`     | `NSFaceIDUsageDescription` | `authenticate` |
+| `notifications`  | runtime prompt | `schedule`, `cancel` |
+| `share`          | none | `present` |
+| `clipboard`      | none | `read`, `write`, `clear` |
+| `haptics`        | none | `impact`, `notification`, `selection` |
+| `deviceInfo`     | none | `get` |
+| `openURL`        | none | `open`, `canOpen` |
+| `appBadge`       | none | `set`, `clear` |
+| `speech`         | none (TTS only) | `speak`, `stop`, `voices` |
+| `qrGenerator`    | none | `generate` |
+| `documentPicker` | none | `pick` |
+
+**Held back until a clear user flow justifies them** — kept in tree, not auto-registered, no plist key declared: `location`, `contacts`, plus future `photos`, `calendar`, `reminders`, `microphone`, `speechRecognition`, `health`. Each costs App Store review scrutiny we don't pay until needed.
+
+Adding a capability = a folder under `Sources/HermesCapabilities/` + a `register` line + (if permission-gated) a usage-description key in `project.yml`. See [CLAUDE.md](CLAUDE.md).
 
 ## Architecture at a glance
 
@@ -61,10 +93,12 @@ project.yml                      # XcodeGen spec — source of truth
 Package.swift                    # SPM library targets
 Sources/
   HermesApp/                     # @main, SwiftUI root + coordinator
-  HermesWebView/                 # WKWebView wrapper + JS bridge
+  HermesWebView/                 # WKWebView wrapper + JS bridge + nav delegate
   HermesCapabilities/            # iPhone-native APIs surfaced to JS
-    Camera/  Notifications/
-    ShareSheet/  Biometrics/
+    Camera/  Biometrics/  Notifications/  ShareSheet/
+    Clipboard/  Haptics/  DeviceInfo/  OpenURL/
+    AppBadge/  SpeechSynthesis/  QRGenerator/  DocumentPicker/
+    Location/  Contacts/         # in tree, not auto-registered
   HermesCore/                    # AppSettings, Keychain, Logger,
                                  # HermesEndpoint, EndpointStore,
                                  # EndpointQR, FingerprintPinner
