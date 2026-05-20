@@ -1,6 +1,5 @@
 import SwiftUI
 import HermesCore
-import HermesBridge
 import HermesCapabilities
 import HermesWebView
 import HermesUI
@@ -8,7 +7,7 @@ import HermesUI
 @main
 struct HermesiOSApp: App {
     @StateObject private var settings = AppSettings.shared
-    @StateObject private var session = SessionManager.shared
+    @StateObject private var store = EndpointStore.shared
 
     init() {
         Task {
@@ -20,30 +19,23 @@ struct HermesiOSApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(settings)
-                .environmentObject(session)
+                .environmentObject(store)
                 .onOpenURL { handleDeepLink($0) }
         }
     }
 
+    /// Accepts `hermes://agent?payload=<base64>` deep links so a user can share an endpoint via
+    /// any text/AirDrop channel as an alternative to the QR.
     private func handleDeepLink(_ url: URL) {
-        // hermes://pair?payload=<base64>
-        guard url.scheme == "hermes" else { return }
-        guard url.host == "pair" else { return }
+        guard url.scheme == "hermes", url.host == "agent" else { return }
         do {
-            let payload = try QRPairing.decode(url.absoluteString)
-            let device = PairedDevice(
-                id: payload.deviceId,
-                displayName: payload.displayName,
-                host: payload.host,
-                port: payload.port,
-                fingerprint: payload.fingerprint,
-                deviceToken: payload.deviceToken,
-                relayRoutingToken: payload.relayRoutingToken
-            )
-            try session.addPaired(device)
-            Task { await session.connect(to: device) }
+            let payload = try EndpointQR.decode(url.absoluteString)
+            let endpoint = try EndpointQR.endpoint(from: payload)
+            Task { @MainActor in
+                try? store.add(endpoint, activate: true)
+            }
         } catch {
-            Loggers.app.error("Pairing deep link failed: \(error.localizedDescription, privacy: .public)")
+            Loggers.app.error("Endpoint deep link failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

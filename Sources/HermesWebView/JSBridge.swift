@@ -2,24 +2,25 @@ import Foundation
 import WebKit
 import HermesCore
 import HermesCapabilities
-import HermesBridge
 
-/// Routes JS-side calls (window.hermes.invoke) to native handlers.
-/// Single WKScriptMessageHandler — every message arrives via `userContentController(_:didReceive:)`
-/// with `message.name == "hermes"`. Don't register additional handler names.
+/// Routes JS-side calls (window.hermes.invoke) to native iPhone capabilities.
+/// Single `WKScriptMessageHandler` — every message arrives via `userContentController(_:didReceive:)`
+/// with `message.name == "hermes"`.
+///
+/// Method format:
+///   `capability.<name>.<method>` — invoke a registered HermesCapability (camera, share, notifications, ...)
+///   `meta.info` — return device info (model, OS, app version)
+///
+/// Hermes-agent code running in the WKWebView calls:
+///   const photo = await window.hermes.invoke("capability.camera.scanQR");
+///   const me    = await window.hermes.invoke("meta.info");
 public final class JSBridge: NSObject, WKScriptMessageHandler, @unchecked Sendable {
 
     private weak var webView: WKWebView?
     private let registry: CapabilityRegistry
-    private let session: () -> BridgeClient?
 
-    /// - Parameters:
-    ///   - registry: where capability lookups go.
-    ///   - session: closure returning the currently-active BridgeClient (or nil). Lazy so the
-    ///     bridge can be wired up before the user has paired a Mac.
-    public init(registry: CapabilityRegistry = .shared, session: @escaping () -> BridgeClient?) {
+    public init(registry: CapabilityRegistry = .shared) {
         self.registry = registry
-        self.session = session
     }
 
     public func attach(to webView: WKWebView) { self.webView = webView }
@@ -41,18 +42,16 @@ public final class JSBridge: NSObject, WKScriptMessageHandler, @unchecked Sendab
                 let result = try await self.route(method: method, params: params)
                 self.deliver(id: id, result: result, error: nil)
             } catch {
-                let bridgeError = BridgeError(code: "capability_error", message: "\(error)")
-                self.deliver(id: id, result: nil, error: bridgeError)
+                self.deliver(id: id, result: nil, error: "\(error)")
             }
         }
     }
 
-    /// Method format: `capability.<name>.<method>` or `bridge.<command>`.
     private func route(method: String, params: [String: Any]) async throws -> AnyCodable? {
         let parts = method.split(separator: ".", maxSplits: 2, omittingEmptySubsequences: true).map(String.init)
-        guard parts.count >= 2 else { throw CapabilityError.unknownMethod(method) }
+        guard let head = parts.first else { throw CapabilityError.unknownMethod(method) }
 
-        switch parts[0] {
+        switch head {
         case "capability":
             guard parts.count == 3 else { throw CapabilityError.unknownMethod(method) }
             let capabilityName = parts[1]
@@ -60,28 +59,34 @@ public final class JSBridge: NSObject, WKScriptMessageHandler, @unchecked Sendab
             guard let cap = await registry.capability(named: capabilityName) else {
                 throw CapabilityError.unknownMethod("unknown capability \(capabilityName)")
             }
-            let typed = try Self.codableParams(params)
-            return try await cap.invoke(method: methodName, params: typed)
+            return try await cap.invoke(method: methodName, params: Self.codableParams(params))
 
-        case "bridge":
-            // Forward to the Mac via the active BridgeClient.
-            guard parts.count >= 2 else { throw CapabilityError.unknownMethod(method) }
-            guard let client = session() else { throw CapabilityError.underlying("no active bridge session") }
-            let commandName = parts.dropFirst().joined(separator: ".")
-            let jsonParams = try Self.jsonValue(from: params)
-            let result = try await client.run(command: commandName, params: jsonParams)
-            return try result.map { try AnyCodable(forwarding: $0) }
+        case "meta":
+            return try meta(method: parts.dropFirst().joined(separator: "."))
 
         default:
             throw CapabilityError.unknownMethod(method)
         }
     }
 
-    private func deliver(id: String, result: AnyCodable?, error: BridgeError?) {
+    private func meta(method: String) throws -> AnyCodable {
+        switch method {
+        case "info":
+            let info: [String: AnyCodable] = [
+                "platform":  .string("ios"),
+                "appVersion": .string(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"),
+            ]
+            return .object(info)
+        default:
+            throw CapabilityError.unknownMethod("meta.\(method)")
+        }
+    }
+
+    private func deliver(id: String, result: AnyCodable?, error: String?) {
         let payload: [String: Any] = [
             "id": id,
             "result": (try? result.map { try JSONSerialization.jsonObject(with: JSONEncoder().encode($0)) }) as Any? ?? NSNull(),
-            "error": error.map { ["code": $0.code, "message": $0.message] } as Any? ?? NSNull(),
+            "error": error as Any? ?? NSNull(),
         ]
         guard let data = try? JSONSerialization.data(withJSONObject: payload),
               let json = String(data: data, encoding: .utf8) else { return }
@@ -91,13 +96,9 @@ public final class JSBridge: NSObject, WKScriptMessageHandler, @unchecked Sendab
         }
     }
 
-    // MARK: - Conversion helpers
-
     private static func codableParams(_ raw: [String: Any]) throws -> CapabilityParams {
         var out: CapabilityParams = [:]
-        for (k, v) in raw {
-            out[k] = try toAnyCodable(v)
-        }
+        for (k, v) in raw { out[k] = try toAnyCodable(v) }
         return out
     }
 
@@ -114,18 +115,5 @@ public final class JSBridge: NSObject, WKScriptMessageHandler, @unchecked Sendab
             return .object(dict)
         }
         return .null
-    }
-
-    private static func jsonValue(from raw: [String: Any]) throws -> JSONValue {
-        let data = try JSONSerialization.data(withJSONObject: raw)
-        return try JSONDecoder().decode(JSONValue.self, from: data)
-    }
-}
-
-private extension AnyCodable {
-    /// Forward a HermesBridge JSONValue into AnyCodable without coupling the modules in the type system.
-    init(forwarding value: JSONValue) throws {
-        let data = try JSONEncoder().encode(value)
-        self = try JSONDecoder().decode(AnyCodable.self, from: data)
     }
 }

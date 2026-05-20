@@ -1,48 +1,39 @@
 import SwiftUI
 import HermesCore
-import HermesBridge
 import HermesWebView
 import HermesUI
 
 struct RootView: View {
     @EnvironmentObject var settings: AppSettings
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var store: EndpointStore
     @State private var showingSettings = false
 
-    private var bridge: JSBridge {
-        JSBridge { session.activeClient }
-    }
+    private var bridge: JSBridge { JSBridge() }
 
     var body: some View {
         Group {
-            if session.pairedDevices.isEmpty {
-                PairHeroView(session: session)
+            if let active = store.activeEndpoint {
+                webShell(for: active)
             } else {
-                webShell
+                ConnectHeroView(store: store)
             }
         }
         .sheet(isPresented: $showingSettings) {
-            SettingsView(settings: settings, session: session)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .hermesOpenSettings)) { _ in
-            showingSettings = true
+            SettingsView(store: store)
         }
     }
 
-    private var webShell: some View {
+    private func webShell(for endpoint: HermesEndpoint) -> some View {
         ZStack(alignment: .topTrailing) {
-            HermesWebView(url: settings.webViewURL, bridge: bridge)
+            HermesWebView(endpoint: endpoint, bridge: bridge)
                 .ignoresSafeArea()
 
-            VStack(alignment: .trailing, spacing: 8) {
-                Button {
-                    showingSettings = true
-                } label: {
-                    Image(systemName: "gearshape.fill")
-                        .padding(10)
-                        .background(.thinMaterial, in: Circle())
-                }
-                ConnectionStatusView(session: session)
+            Button {
+                showingSettings = true
+            } label: {
+                Image(systemName: "gearshape.fill")
+                    .padding(10)
+                    .background(.thinMaterial, in: Circle())
             }
             .padding()
         }
