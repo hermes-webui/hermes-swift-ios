@@ -1,12 +1,12 @@
 # CLAUDE.md — hermes-swift-ios
 
-> Read this before touching any code. Native iOS app embedding the Hermes Agent dashboard in a `WKWebView`, with a JS bridge for iPhone-native capabilities.
+> Read this before touching any code. Native iOS app embedding a webui dashboard in a `WKWebView`, with a JS bridge for iPhone-native capabilities.
 
 ---
 
 ## What this project is
 
-A SwiftUI iOS app that loads a user-configured Hermes Agent URL in a `WKWebView` — the same dashboard the Mac app loads — and adds two things the web UI can't do alone:
+A SwiftUI iOS app that loads a user-configured webui URL in a `WKWebView` — the same dashboard the desktop app loads — and adds two things the web UI can't do alone:
 
 1. **iPhone-native capabilities surfaced into the web UI** — `WKScriptMessageHandler` JS bridge (`window.hermes.invoke(...)`). Camera, share sheet, biometrics, notifications today; more as the app grows.
 2. **A native-feeling onboarding + endpoint setup** — first launch is a scan-to-connect screen, paired endpoints persist in the Keychain, optional TLS leaf-cert pinning via QR-carried fingerprint.
@@ -17,7 +17,7 @@ A SwiftUI iOS app that loads a user-configured Hermes Agent URL in a `WKWebView`
 **Min target:** iOS 16
 **Project gen:** [XcodeGen](https://github.com/yonaskolb/XcodeGen) — `project.yml` is the source of truth, `HermesiOS.xcodeproj` is regenerated, never hand-edited
 **Tests:** `swift test` (library targets) + Xcode test action
-**Sister repo:** [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac) — read its CLAUDE.md too; many WebKit/ATS gotchas carry over.
+Sister repo guidance removed for agnostic setup.
 
 ---
 

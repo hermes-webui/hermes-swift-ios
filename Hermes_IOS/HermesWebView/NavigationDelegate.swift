@@ -7,7 +7,7 @@ import WebKit
 ///      don't match.
 ///   2. Scheme allowlist — only http/https loads are permitted (no file://, no app schemes).
 ///   3. Failure mapping — translates NSURLError codes into actionable messages (mirrors patterns
-///      from hermes-swift-mac's BrowserWindowController).
+///      used by the desktop client.
 public final class NavigationDelegate: NSObject, WKNavigationDelegate {
 
     public var pinner: FingerprintPinner?
@@ -68,7 +68,7 @@ public final class NavigationDelegate: NSObject, WKNavigationDelegate {
         let hint: String
         switch ns.code {
         case -1022: hint = "Blocked by App Transport Security. Add NSAllowsArbitraryLoadsInWebContent for dev, or use HTTPS."
-        case -1004: hint = "Server refused the connection. Is hermes-agent running and reachable from this device?"
+        case -1004: hint = "Server refused the connection. Is webui running and reachable from this device?"
         case -1003: hint = "Hostname could not be resolved."
         case -1001: hint = "Request timed out."
         case -1202: hint = "TLS evaluation failed (cert untrusted or mismatched)."

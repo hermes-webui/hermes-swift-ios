@@ -28,7 +28,7 @@ If you later add capabilities that touch additional required-reason APIs (Photos
 Copy this into the Notes field, edit demo URL/credentials:
 
 ```
-Hermes is an iOS client for Hermes Agent (https://github.com/NousResearch/hermes-agent),
+Hermes is an iOS client for webui (https://github.com/hermes-webui),
 an open-source local-first agent runtime that ships its own browser-based dashboard.
 This app embeds that dashboard in a WKWebView, pointed at a user-configured agent URL,
 and adds a JavaScript bridge that gives the agent access to iPhone-native APIs
@@ -46,11 +46,11 @@ Native value over a web wrapper:
  - iOS-native onboarding, settings, and connection management (SwiftUI)
 
 To test the app, please use the following demo credentials:
-   Endpoint URL: <FILL IN — point at a public hermes-agent you spin up for review>
+   Endpoint URL: <FILL IN — point at a public webui you spin up for review>
    OR: tap "Add another Hermes" → paste this QR string:
    hermes:agent:v1:<FILL IN — generate via EndpointQR.encode(...)>
 
-NSAllowsArbitraryLoadsInWebContent is enabled because Hermes Agent is commonly
+NSAllowsArbitraryLoadsInWebContent is enabled because webui is commonly
 self-hosted on a user's own machine, LAN, or Tailscale tailnet where TLS may not
 be configured. The user explicitly enters/scans their agent URL and is shown
 its TLS state (lock-shield icon when pinned) in Settings. Native networking is
@@ -63,10 +63,10 @@ deep link.
 
 ## Setting up a demo agent for review
 
-Apple's reviewers cannot reach a Mac on your home network. They need a publicly accessible hermes-agent endpoint to exercise the app. Options:
+Apple's reviewers cannot reach a Mac on your home network. They need a publicly accessible webui endpoint to exercise the app. Options:
 
-1. **Spin up a temporary public hermes-agent** on a small VPS, generate the connect QR with `EndpointQR.encode(...)`, paste the resulting `hermes:agent:v1:...` string into the reviewer notes. Decommission after the build is approved.
-2. **Use a tunnel** — `cloudflared tunnel` or `ngrok` exposing your local hermes-agent for the duration of review. Free, fast to set up, but leaves your agent publicly accessible while the tunnel is up.
+1. **Spin up a temporary public webui** on a small VPS, generate the connect QR with `EndpointQR.encode(...)`, paste the resulting `hermes:agent:v1:...` string into the reviewer notes. Decommission after the build is approved.
+2. **Use a tunnel** — `cloudflared tunnel` or `ngrok` exposing your local webui for the duration of review. Free, fast to set up, but leaves your agent publicly accessible while the tunnel is up.
 3. **Provide reviewer-only credentials** to a long-running shared demo instance you operate.
 
 Without one of these, the most likely outcome is a Guideline 4.2 / 2.1 rejection citing "we couldn't test your app's core functionality."

@@ -229,7 +229,7 @@ public struct SettingsView: View {
 
         let host = manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !host.isEmpty else {
-            manualError = "Enter a WebUI host."
+            manualError = "Enter a webui host."
             return
         }
 

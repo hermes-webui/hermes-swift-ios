@@ -5,8 +5,8 @@ import Foundation
 /// Wire format: `hermes:agent:v1:<base64url(JSON)>` (and the equivalent
 /// `hermes://agent?payload=<base64url(JSON)>` deep link).
 ///
-/// The Mac side (or a future config helper) renders this QR when the user wants to share
-/// the agent URL with their phone. The iPhone scans, decodes, and writes the result to
+/// A webui machine can render this QR to share its endpoint with the phone.
+/// The iPhone scans, decodes, and writes the result to
 /// `EndpointStore`. Pinning material (`leafCertFingerprint`) is optional but recommended for
 /// any TLS-terminated deployment.
 public enum EndpointQR {

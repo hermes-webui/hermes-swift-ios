@@ -1,10 +1,8 @@
 import Foundation
 
-/// A configured Hermes Agent endpoint — the URL the WKWebView will load + optional integrity material.
+/// A configured webui endpoint — the URL the WKWebView will load + optional integrity material.
 ///
-/// The Mac doesn't have to be running. The iPhone reaches `url` over whatever network path the user
-/// already has (Tailscale, public domain, local LAN, etc.). This app inherits the user's existing
-/// reachability rather than building its own.
+/// The iPhone reaches `url` through the user's existing Tailscale connectivity.
 public struct HermesEndpoint: Codable, Hashable, Sendable, Identifiable {
     public var id: String { url.absoluteString }
 
@@ -20,8 +18,7 @@ public struct HermesEndpoint: Codable, Hashable, Sendable, Identifiable {
     /// about defending; leave nil for plain `http://` localhost dev.
     public let leafCertFingerprint: String?
 
-    /// Optional bearer/auth header injected on each request to `url`. Stored in the Keychain via
-    /// `EndpointStore`. Useful when the agent is gated by a static token.
+    /// Reserved for backward compatibility with older endpoint payloads.
     public let bearerToken: String?
 
     public let addedAt: Date

@@ -1,7 +1,7 @@
 import Foundation
 import HermesCore
 
-/// Central lookup table for capabilities. The JS bridge and the Mac BridgeServer both go through this.
+/// Central lookup table for capabilities. The JS bridge routes calls through this registry.
 /// Registration is lazy — instantiating a Capability MUST NOT trigger permission prompts.
 public actor CapabilityRegistry {
     public static let shared = CapabilityRegistry()

@@ -3,9 +3,9 @@ import WebKit
 
 public enum WebViewConfiguration {
 
-    /// Build the canonical `WKWebViewConfiguration` for the Hermes shell.
+    /// Build the canonical `WKWebViewConfiguration` for the app web container.
     /// Registers exactly ONE script message handler: `"hermes"`. Do not add more — route everything
-    /// through that single handler so the protocol stays a one-channel contract with hermes-webui.
+    /// through that single handler so the protocol stays a one-channel contract with the web client.
     public static func make(bridge: JSBridge) -> WKWebViewConfiguration {
         let config = WKWebViewConfiguration()
         let userContent = WKUserContentController()
@@ -13,7 +13,7 @@ public enum WebViewConfiguration {
         // Single script message handler — all JS → native traffic flows through this.
         userContent.add(bridge, name: "hermes")
 
-        // Inject the bridge stub so hermes-webui can call window.hermes.invoke(...)
+        // Inject the bridge stub so the web client can call window.hermes.invoke(...)
         // before any of its own scripts run.
         let stub = """
         (function() {

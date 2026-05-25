@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-/// Central lookup table for capabilities. The JS bridge and the Mac BridgeServer both go through this.
+/// Central lookup table for capabilities. The JS bridge routes all capability calls through this.
 /// Registration is lazy — instantiating a Capability MUST NOT trigger permission prompts.
 public actor CapabilityRegistry {
     public static let shared = CapabilityRegistry()
@@ -37,7 +37,7 @@ public actor CapabilityRegistry {
         register(CameraCapability())            // NSCameraUsageDescription
         register(BiometricsCapability())        // NSFaceIDUsageDescription
         register(NotificationsCapability())     // requested at runtime
-        // No-permission utility capabilities — safe to ship at v0.1.
+        // No-permission utility capabilities.
         register(ShareSheetCapability())
         register(ClipboardCapability())
         register(HapticsCapability())

@@ -57,8 +57,8 @@ targets:
         UILaunchScreen:
           UIColorName: ""
         # Permission strings — only what real flows actually exercise.
-        NSCameraUsageDescription: "Hermes uses the camera to scan the QR code that connects you to your Hermes Agent."
-        NSFaceIDUsageDescription: "Hermes uses Face ID to authorize sensitive agent actions on this device."
+        NSCameraUsageDescription: "This app uses the camera to scan a QR code for webui connection setup."
+        NSFaceIDUsageDescription: "This app uses Face ID to authorize sensitive actions on this device."
         # ATS: allow non-HTTPS in WebView content for LAN dev (Tailscale magic-DNS hostnames are HTTPS).
         # Native networking is unaffected.
         NSAppTransportSecurity:

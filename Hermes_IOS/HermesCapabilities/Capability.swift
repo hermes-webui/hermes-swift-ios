@@ -1,9 +1,9 @@
 import Foundation
 
-/// Every iPhone-native API exposed to Hermes (camera, location, contacts, ...) conforms to this.
+/// Every iPhone-native API exposed to the web bridge (camera, location, contacts, ...) conforms to this.
 /// Implementations live one folder deep under `Sources/HermesCapabilities/<Name>/`.
 public protocol Capability: AnyObject, Sendable {
-    /// Identifier used by the JS bridge and the Mac BridgeServer (e.g. "camera", "location").
+    /// Identifier used by the JS bridge (e.g. "camera", "location").
     var name: String { get }
 
     /// Current authorization status without prompting.

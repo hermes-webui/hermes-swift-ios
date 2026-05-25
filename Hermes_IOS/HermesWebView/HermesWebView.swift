@@ -1,7 +1,7 @@
 import SwiftUI
 import WebKit
 
-/// SwiftUI wrapper that hosts the Hermes Agent dashboard inside a `WKWebView`.
+/// SwiftUI wrapper that hosts the configured webui inside a `WKWebView`.
 public struct HermesWebView: UIViewRepresentable {
     public let endpoint: HermesEndpoint
     public let bridge: JSBridge
