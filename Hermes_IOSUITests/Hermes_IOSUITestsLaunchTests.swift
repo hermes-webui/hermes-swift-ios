@@ -2,7 +2,7 @@
 //  Hermes_IOSUITestsLaunchTests.swift
 //  Hermes_IOSUITests
 //
-//  Created by Justin Gracier on 5/24/26.
+//  Created by Hermes Contributors on 5/24/26.
 //
 
 import XCTest

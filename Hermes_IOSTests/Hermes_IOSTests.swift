@@ -2,7 +2,7 @@
 //  Hermes_IOSTests.swift
 //  Hermes_IOSTests
 //
-//  Created by Justin Gracier on 5/24/26.
+//  Created by Hermes Contributors on 5/24/26.
 //
 
 import Testing
