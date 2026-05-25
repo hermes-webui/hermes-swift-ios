@@ -23,6 +23,7 @@ struct RootView: View {
         ZStack {
             if let active = store.activeEndpoint {
                 HermesWebView(endpoint: active, bridge: bridge, reconnectGeneration: store.connectionEpoch)
+                    .id("\(active.url.absoluteString)|\(store.connectionEpoch)")
                     .ignoresSafeArea()
 
                 launcherOverlay

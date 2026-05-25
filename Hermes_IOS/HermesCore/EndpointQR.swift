@@ -20,13 +20,16 @@ public enum EndpointQR {
         public let url: String
         public let displayName: String
         public let leafCertFingerprint: String?
+        public let nativeBridgeEnabled: Bool?
 
         public init(url: String,
                     displayName: String,
-                    leafCertFingerprint: String? = nil) {
+                    leafCertFingerprint: String? = nil,
+                    nativeBridgeEnabled: Bool? = nil) {
             self.url = url
             self.displayName = displayName
             self.leafCertFingerprint = leafCertFingerprint
+            self.nativeBridgeEnabled = nativeBridgeEnabled
         }
     }
 
@@ -62,7 +65,8 @@ public enum EndpointQR {
         return HermesEndpoint(
             url: url,
             displayName: payload.displayName,
-            leafCertFingerprint: payload.leafCertFingerprint
+            leafCertFingerprint: payload.leafCertFingerprint,
+            nativeBridgeEnabled: payload.nativeBridgeEnabled ?? true
         )
     }
 }

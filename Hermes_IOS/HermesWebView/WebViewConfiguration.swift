@@ -6,16 +6,17 @@ public enum WebViewConfiguration {
     /// Build the canonical `WKWebViewConfiguration` for the app web container.
     /// Registers exactly ONE script message handler: `"hermes"`. Do not add more — route everything
     /// through that single handler so the protocol stays a one-channel contract with the web client.
-    public static func make(bridge: JSBridge) -> WKWebViewConfiguration {
+    public static func make(bridge: JSBridge, bridgeEnabled: Bool) -> WKWebViewConfiguration {
         let config = WKWebViewConfiguration()
         let userContent = WKUserContentController()
 
-        // Single script message handler — all JS → native traffic flows through this.
-        userContent.add(bridge, name: "hermes")
+        if bridgeEnabled {
+            // Single script message handler — all JS → native traffic flows through this.
+            userContent.add(bridge, name: "hermes")
 
-        // Inject the bridge stub so the web client can call window.hermes.invoke(...)
-        // before any of its own scripts run.
-        let stub = """
+            // Inject the bridge stub so the web client can call window.hermes.invoke(...)
+            // before any of its own scripts run.
+            let stub = """
         (function() {
           if (window.hermes) return;
           const pending = new Map();
@@ -41,13 +42,13 @@ public enum WebViewConfiguration {
           function reject(p, e) { p.reject(e); }
         })();
         """
-        let userScript = WKUserScript(source: stub, injectionTime: .atDocumentStart, forMainFrameOnly: true)
-        userContent.addUserScript(userScript)
+            let userScript = WKUserScript(source: stub, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+            userContent.addUserScript(userScript)
 
-        // iOS WKWebView speech-recognition shim:
-        // expose a SpeechRecognition-like surface backed by native capability.speechRecognition.transcribeOnce.
-        // This gives webui a reliable STT path when browser speech APIs are missing/partial on iPhone.
-        let speechShim = """
+            // iOS WKWebView speech-recognition shim:
+            // expose a SpeechRecognition-like surface backed by native capability.speechRecognition.transcribeOnce.
+            // This gives webui a reliable STT path when browser speech APIs are missing/partial on iPhone.
+            let speechShim = """
         (function() {
           if (window.SpeechRecognition || window.webkitSpeechRecognition) return;
           if (!window.hermes || typeof window.hermes.invoke !== "function") return;
@@ -132,8 +133,9 @@ public enum WebViewConfiguration {
           window.webkitSpeechRecognition = HermesSpeechRecognition;
         })();
         """
-        let speechShimScript = WKUserScript(source: speechShim, injectionTime: .atDocumentStart, forMainFrameOnly: true)
-        userContent.addUserScript(speechShimScript)
+            let speechShimScript = WKUserScript(source: speechShim, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+            userContent.addUserScript(speechShimScript)
+        }
 
         config.userContentController = userContent
         config.allowsInlineMediaPlayback = true

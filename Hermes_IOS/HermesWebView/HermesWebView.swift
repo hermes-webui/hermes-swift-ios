@@ -18,7 +18,7 @@ public struct HermesWebView: UIViewRepresentable {
     }
 
     public func makeUIView(context: Context) -> WKWebView {
-        let config = WebViewConfiguration.make(bridge: bridge)
+        let config = WebViewConfiguration.make(bridge: bridge, bridgeEnabled: endpoint.nativeBridgeEnabled)
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator

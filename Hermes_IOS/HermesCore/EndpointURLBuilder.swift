@@ -13,9 +13,9 @@ enum EndpointURLBuilder {
         }
 
         var components = URLComponents()
-        // Default to HTTPS for secure-context browser features (e.g. microphone/web voice).
-        // Explicit schemes provided by the user (http:// or https://) are preserved above.
-        components.scheme = "https"
+        // For manual host:port entries, default to HTTP unless the user explicitly provides a scheme.
+        // This matches common self-hosted services (like :9119) that are not TLS-terminated.
+        components.scheme = "http"
 
         // Support IPv6 literals in manual input.
         let bareHost = trimmed.hasPrefix("[") && trimmed.hasSuffix("]")

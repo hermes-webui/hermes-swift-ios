@@ -52,12 +52,6 @@ public final class NavigationDelegate: NSObject, WKNavigationDelegate, WKUIDeleg
         decisionHandler(.allow)
     }
 
-    public func webView(_ webView: WKWebView,
-                        didFailProvisionalNavigation navigation: WKNavigation!,
-                        withError error: Error) {
-        handleFailure(error)
-    }
-
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         handleFailure(error)
     }
@@ -97,6 +91,12 @@ public final class NavigationDelegate: NSObject, WKNavigationDelegate, WKUIDeleg
         // TODO: surface to user via an error overlay; logging only for now.
     }
 
+    public func webView(_ webView: WKWebView,
+                        didFailProvisionalNavigation navigation: WKNavigation!,
+                        withError error: Error) {
+        handleFailure(error)
+    }
+
     @available(iOS 15.0, *)
     private func requestAccess(for mediaType: AVMediaType,
                                decisionHandler: @escaping (WKPermissionDecision) -> Void) {
@@ -122,4 +122,5 @@ public final class NavigationDelegate: NSObject, WKNavigationDelegate, WKUIDeleg
             self.requestAccess(for: .audio, decisionHandler: decisionHandler)
         }
     }
+
 }

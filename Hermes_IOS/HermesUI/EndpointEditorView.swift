@@ -6,12 +6,14 @@ public struct EndpointEditorView: View {
     let endpoint: HermesEndpoint
 
     @State private var host: String
+    @State private var nativeBridgeEnabled: Bool
     @State private var error: String?
 
     public init(store: EndpointStore = .shared, endpoint: HermesEndpoint) {
         self.store = store
         self.endpoint = endpoint
         _host = State(initialValue: endpoint.url.absoluteString)
+        _nativeBridgeEnabled = State(initialValue: endpoint.nativeBridgeEnabled)
     }
 
     public var body: some View {
@@ -23,6 +25,7 @@ public struct EndpointEditorView: View {
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
                         .font(.system(.body, design: .monospaced))
+                    Toggle("Enable native iPhone APIs for this connection", isOn: $nativeBridgeEnabled)
                 }
 
                 Section {
@@ -65,6 +68,7 @@ public struct EndpointEditorView: View {
             url: url,
             displayName: url.host ?? trimmed,
             leafCertFingerprint: endpoint.leafCertFingerprint,
+            nativeBridgeEnabled: nativeBridgeEnabled,
             addedAt: endpoint.addedAt
         )
 
