@@ -1,27 +1,27 @@
 # hermes-swift-ios
 
-> The best way to use Hermes from your iPhone.
+> Native iPhone client for Hermes WebUI.
 
-Native iOS client for [Hermes Agent](https://github.com/NousResearch/hermes-agent). The iPhone embeds the same WKWebView dashboard the [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac) app shows — pointed at your agent's URL, however you already reach it (Tailscale, public domain, local LAN) — with a JavaScript bridge that surfaces iPhone-native capabilities (camera, notifications, share sheet, biometrics) into the dashboard so the agent can use them.
+Native iOS client for Hermes WebUI. The app loads your configured WebUI URL (Tailscale, public domain, local LAN, tunnel) in WKWebView and exposes iPhone-native capabilities (camera, notifications, share sheet, biometrics, etc.) through a JavaScript bridge.
 
 ## How you connect
 
-**Install [Tailscale](https://tailscale.com) on your Mac and iPhone. Scan one QR. Done.**
+**Install [Tailscale](https://tailscale.com) on your WebUI machine and iPhone. Scan one QR. Done.**
 
-That's the recommended path. Tailscale gives your Mac a stable hostname (e.g. `hermes.tailnet.ts.net`) reachable from cellular, hotel WiFi, anywhere — no port forwarding, no public DNS, no router config. The Mac's Hermes app generates the QR with that hostname; the iPhone scans it; the WKWebView opens the dashboard.
+That's the recommended path. Tailscale gives your WebUI machine a stable hostname (for example `hermes.tailnet.ts.net`) reachable from cellular, hotel WiFi, anywhere — no port forwarding, no public DNS, no router config. Hermes WebUI can expose a QR payload with that hostname; the iPhone scans it; WKWebView opens the dashboard.
 
-- **On the Mac** — share the agent URL via the Mac app's QR (or paste the link).
-- **On the iPhone** — first launch is a full-screen *Scan to connect* button. Tap → camera → QR. Done.
+- **On the WebUI machine** — run Hermes WebUI and share the WebUI URL via QR (or copy/paste URL manually).
+- **On the iPhone** — open Connections and scan QR, or enter host + WebUI password manually.
 
-The QR carries the agent URL plus (optionally) a TLS cert fingerprint to pin against. The iPhone stores both in the Keychain and the WKWebView loads the dashboard. Same experience the Mac gives you, just on your phone.
+The QR carries the WebUI URL plus (optionally) a TLS cert fingerprint to pin against. The iPhone stores both in the Keychain and WKWebView loads the dashboard.
 
-Re-connect or add another agent? Same flow, surfaced as *Add another Hermes* in Settings.
+Re-connect or add another endpoint? Same flow in *Connections*.
 
 > You don't *have* to use Tailscale — the app accepts any URL. See [Reachability](#reachability--not-in-this-app) below for the full set of options if you have a different setup.
 
 ## Reachability — not in this app
 
-The iPhone reaches the agent URL however the user already does. We do not run a relay, a coordination server, or any infrastructure for this. **Set up reachability once at the agent layer** and every Hermes client — Mac, iPhone, future iPad, future Android — inherits it.
+The iPhone reaches the WebUI URL however the user already does. We do not run a relay, a coordination server, or any infrastructure for this. **Set up reachability once at the WebUI layer** and every Hermes client inherits it.
 
 ### Tailscale — the recommended setup
 
@@ -34,10 +34,10 @@ This is the path we recommend, and it's the assumption the rest of the docs are 
 - ✅ End-to-end encrypted WireGuard tunnel underneath
 
 Steps:
-1. Install Tailscale on your Mac and iPhone (5 minutes; sign in with the same account on both)
-2. Note the Mac's tailnet hostname from the Tailscale menu bar — something like `studio.tailnet.ts.net`
-3. Run Hermes Agent on the Mac, point the Mac app at it locally
-4. In the Mac app, generate the iPhone connect QR using the tailnet hostname
+1. Install Tailscale on your WebUI machine and iPhone (sign in with the same account on both)
+2. Note the machine tailnet hostname from Tailscale — something like `studio.tailnet.ts.net`
+3. Run Hermes WebUI on that machine
+4. Generate/share the iPhone connect QR (or copy host + password)
 5. Scan from the iPhone — done
 
 ### Other options that work
@@ -46,10 +46,10 @@ The app accepts any URL, so you can skip Tailscale if you already have one of th
 
 | Setup | When it fits | Difficulty |
 | --- | --- | --- |
-| **Tailscale** | Default; reach the agent from anywhere | 5 min, both devices |
-| LAN-only (`http://hermes.local:8787`) | Home use; phone and Mac on same WiFi | Trivial — works out of the box |
-| Public domain + Let's Encrypt | You run a dedicated server with a real DNS name | 1 hour, needs DNS |
-| Cloudflare Tunnel / ngrok / frp | Quick public exposure of a self-hosted agent without opening router ports | 10 min, needs a Cloudflare or ngrok account |
+| **Tailscale** | Default; reach WebUI from anywhere | 5 min, both devices |
+| LAN-only (`http://hermes.local:8787`) | Home use; phone and WebUI machine on same WiFi | Trivial — works out of the box |
+| Public domain + Let's Encrypt | You run WebUI on a dedicated server with DNS | 1 hour, needs DNS |
+| Cloudflare Tunnel / ngrok / frp | Quick public exposure of self-hosted WebUI without opening router ports | 10 min, needs account setup |
 
 We don't bundle or require any of these — Tailscale is highlighted because it's the lowest-friction "works from anywhere" answer on Apple devices, and the path with the smallest blast radius (no machine becomes publicly addressable, no router config).
 
@@ -112,21 +112,20 @@ Adding a capability = a folder under `Sources/HermesCapabilities/` + a `register
 │                    │  Camera/Notif/...  │      │
 │                    └────────────────────┘      │
 └────────────────────┬───────────────────────────┘
-                     │  reaches agent URL via
+                     │  reaches WebUI URL via
                      │  user's existing network
                      ▼
-              hermes-agent dashboard
-              (same target the Mac app uses)
+              Hermes WebUI dashboard
 ```
 
 ## Repo structure
 
 ```
-HermesiOS.xcodeproj/             # generated by XcodeGen
-project.yml                      # XcodeGen spec — source of truth
-Package.swift                    # SPM library targets
-Sources/
-  HermesApp/                     # @main, SwiftUI root + coordinator
+Hermes_IOS.xcodeproj/
+Hermes_IOS/
+  Hermes_IOSApp.swift            # @main
+  Info.plist
+  HermesApp/                     # privacy manifest
   HermesWebView/                 # WKWebView wrapper + JS bridge + nav delegate
   HermesCapabilities/            # iPhone-native APIs surfaced to JS
     Camera/  Biometrics/  Notifications/  ShareSheet/
@@ -135,19 +134,18 @@ Sources/
   HermesCore/                    # AppSettings, Keychain, Logger,
                                  # HermesEndpoint, EndpointStore,
                                  # EndpointQR, FingerprintPinner
-  HermesUI/                      # ConnectHero, EndpointSetup, Settings
-Tests/HermesiOSTests/
+  HermesUI/                      # ConnectHero, Settings, RootView, EndpointEditor
+Hermes_IOSTests/
+Hermes_IOSUITests/
 docs/QR_PAYLOAD.md               # wire format of the connect QR
 ```
 
 ## Build
 
-Requires Xcode 15+, Swift 5.9+, iOS 16+ target.
+Requires Xcode 15+ and iOS 16+ target.
 
 ```bash
-brew install xcodegen           # one-time
-xcodegen                        # materialize HermesiOS.xcodeproj
-open HermesiOS.xcodeproj
+open Hermes_IOS.xcodeproj
 ```
 
 For library code only: `swift build && swift test`.
@@ -163,7 +161,7 @@ For library code only: `swift build && swift test`.
 
 ## Status
 
-Initial scaffold. Camera scanner, QR endpoint setup, Keychain-backed endpoint store, TLS pinning in the WKWebView's navigation delegate, JS bridge with capability routing — all wired. Mac-side QR generator is a separate small change on [hermes-swift-mac](https://github.com/hermes-webui/hermes-swift-mac).
+Active iOS client for Hermes WebUI. Includes QR/manual connection flow, Keychain-backed endpoint store, TLS pinning support, and JS capability bridge.
 
 ## License
 
