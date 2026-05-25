@@ -48,7 +48,7 @@ targets:
     info:
       path: Hermes_IOS/Info.plist
       properties:
-        CFBundleDisplayName: Hermes
+        CFBundleDisplayName: WebUI App
         CFBundleShortVersionString: "0.1.0"
         CFBundleVersion: "1"
         LSRequiresIPhoneOS: true

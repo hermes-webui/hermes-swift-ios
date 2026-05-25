@@ -1,4 +1,4 @@
-# hermes-swift-ios
+# webui-swift-ios
 
 Native iPhone client for connecting to a webui over Tailscale.
 

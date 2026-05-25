@@ -20,7 +20,7 @@ Both decode to the same JSON.
 
 ```json
 {
-  "url": "https://hermes.tailnet.ts.net",
+  "url": "https://webui.tailnet.ts.net",
   "displayName": "Home",
   "leafCertFingerprint": "a1b2…ef"
 }

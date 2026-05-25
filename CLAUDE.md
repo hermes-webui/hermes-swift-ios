@@ -1,4 +1,4 @@
-# CLAUDE.md — hermes-swift-ios
+# CLAUDE.md — webui iOS app
 
 > Read this before touching any code. Native iOS app embedding a webui dashboard in a `WKWebView`, with a JS bridge for iPhone-native capabilities.
 
@@ -11,7 +11,7 @@ A SwiftUI iOS app that loads a user-configured webui URL in a `WKWebView` — th
 1. **iPhone-native capabilities surfaced into the web UI** — `WKScriptMessageHandler` JS bridge (`window.hermes.invoke(...)`). Camera, share sheet, notifications today; more as the app grows.
 2. **A native-feeling onboarding + endpoint setup** — first launch is a scan-to-connect screen, paired endpoints persist in the Keychain, optional TLS leaf-cert pinning via QR-carried fingerprint.
 
-**This app does NOT** run a bridge protocol to the Mac, operate any relay or coordination server, or solve cross-network reachability. The iPhone reaches the agent URL via whatever path the user already has set up — the documented and recommended path is **Tailscale on both devices**, but the app accepts any URL (LAN, public domain, Cloudflare Tunnel, ngrok).
+**This app does NOT** run a machine-specific bridge protocol, operate any relay or coordination server, or solve cross-network reachability. The iPhone reaches the webui URL via whatever path the user already has set up — the documented and recommended path is **Tailscale on both devices**, but the app accepts any URL (LAN, public domain, Cloudflare Tunnel, ngrok).
 
 **Language:** Swift 5.9+
 **Min target:** iOS 16
@@ -68,7 +68,7 @@ If you add a capability and forget the usage description, the app **crashes on l
 ### ATS (App Transport Security)
 `http://localhost` is ATS-exempt automatically. Any other `http://` URL — Tailscale magic-DNS, LAN IPs — is **blocked by default**.
 
-`NSAllowsArbitraryLoadsInWebContent` is set in `project.yml` so the WebView can load non-HTTPS agent deployments during development. Native networking is **not** affected by this; if you ever do native HTTPS calls, they hit the standard trust store unless you pin.
+`NSAllowsArbitraryLoadsInWebContent` is set in `project.yml` so the WebView can load non-HTTPS webui deployments during development. Native networking is **not** affected by this; if you ever do native HTTPS calls, they hit the standard trust store unless you pin.
 
 ### Navigation delegate — implement both failure callbacks
 ```swift
@@ -140,7 +140,7 @@ We trim the surface area to only what's actually used so reviews stay fast.
 
 **Background modes:** None declared at v0.1. `voip` and `audio` get rejected when they're not core to the app's purpose. Add background modes — with reviewer-facing justification — only alongside the feature that needs them.
 
-**ATS:** `NSAllowsArbitraryLoadsInWebContent` is set so the WKWebView can load non-HTTPS agent URLs (LAN dev / Tailscale magic-DNS). Reviewable but generally accepted for browser-style apps. Native networking is not exempted.
+**ATS:** `NSAllowsArbitraryLoadsInWebContent` is set so the WKWebView can load non-HTTPS webui URLs (LAN dev / Tailscale magic-DNS). Reviewable but generally accepted for browser-style apps. Native networking is not exempted.
 
 **Encryption (`ITSAppUsesNonExemptEncryption`):** declare `false` once we ship to TestFlight unless we add custom crypto.
 
@@ -151,5 +151,5 @@ When in doubt, slim down. Removing a permission later costs nothing; getting rej
 ## Common gotchas
 
 - **Universal Links / Deep Links** — `hermes://agent?payload=<base64>` is reserved for endpoint-share fallback. Registered in `project.yml` under `CFBundleURLTypes`.
-- **WKWebView and cookies** — `WKWebsiteDataStore` is isolated per app. If the agent expects a shared session, plan for a real auth flow at the webui layer instead of relying on shared cookies.
+- **WKWebView and cookies** — `WKWebsiteDataStore` is isolated per app. If the webui expects a shared session, plan for a real auth flow at the webui layer instead of relying on shared cookies.
 - **Camera in Simulator** — no real camera, but the QR scanner's permission gate still works. Test end-to-end on hardware.

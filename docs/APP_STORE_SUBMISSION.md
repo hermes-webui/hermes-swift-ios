@@ -1,6 +1,6 @@
 # App Store submission notes
 
-Working notes for the human submitting hermes-swift-ios to App Store Connect. Keep up to date alongside major changes.
+Working notes for the human submitting this app to App Store Connect. Keep up to date alongside major changes.
 
 ## Pre-flight checklist
 
@@ -30,7 +30,7 @@ Copy this into the Notes field, edit demo URL/credentials:
 ```
 This app is an iOS client for a webui,
 an open-source local-first agent runtime that ships its own browser-based dashboard.
-This app embeds that dashboard in a WKWebView, pointed at a user-configured agent URL,
+This app embeds that dashboard in a WKWebView, pointed at a user-configured webui URL,
 and adds a JavaScript bridge that gives the agent access to iPhone-native APIs
 (camera, notifications, share sheet, clipboard, haptics, document picker,
 text-to-speech, QR generation).
@@ -52,7 +52,7 @@ To test the app, please use the following demo credentials:
 
 NSAllowsArbitraryLoadsInWebContent is enabled because webui is commonly
 self-hosted on a user's own machine, LAN, or Tailscale tailnet where TLS may not
-be configured. The user explicitly enters/scans their agent URL and is shown
+be configured. The user explicitly enters/scans their webui URL and is shown
 its TLS state (lock-shield icon when pinned) in Settings. Native networking is
 not exempted from ATS.
 

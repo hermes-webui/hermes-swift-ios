@@ -6,7 +6,7 @@ import Foundation
 public struct HermesEndpoint: Codable, Hashable, Sendable, Identifiable {
     public var id: String { url.absoluteString }
 
-    /// e.g. `https://hermes.tailnet.ts.net` or `http://hermes.local:8787`
+    /// e.g. `https://webui.tailnet.ts.net` or `http://webui.local:8787`
     public let url: URL
 
     /// Human-readable label shown in Settings ("Home", "Studio", "Tailscale").

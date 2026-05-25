@@ -5,7 +5,7 @@ final class EndpointQRTests: XCTestCase {
 
     func testRoundTripQRString() throws {
         let payload = EndpointQR.Payload(
-            url: "https://hermes.tailnet.ts.net",
+            url: "https://webui.tailnet.ts.net",
             displayName: "Home",
             leafCertFingerprint: "a1b2c3"
         )
@@ -17,7 +17,7 @@ final class EndpointQRTests: XCTestCase {
 
     func testDecodesDeepLink() throws {
         let payload = EndpointQR.Payload(
-            url: "http://hermes.local:8787",
+            url: "http://webui.local:8787",
             displayName: "LAN dev",
             leafCertFingerprint: nil
         )
