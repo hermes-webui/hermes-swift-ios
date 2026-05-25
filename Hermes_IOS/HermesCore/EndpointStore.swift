@@ -3,13 +3,14 @@ import os
 import Combine
 
 /// Keychain-backed store of `HermesEndpoint`s. Also tracks the user's active selection.
-/// Tokens live alongside their endpoint inside the same blob — all secrets, all Keychain.
+/// Endpoint records live together in the same blob — all secrets, all Keychain.
 @MainActor
 public final class EndpointStore: ObservableObject {
     public static let shared = EndpointStore()
 
     @Published public private(set) var endpoints: [HermesEndpoint] = []
     @Published public private(set) var activeEndpoint: HermesEndpoint?
+    @Published public private(set) var connectionEpoch: Int = 0
 
     private static let endpointsKey = "hermes.endpoints.v1"
     private static let activeURLKey  = "hermes.activeEndpoint.v1"
@@ -52,6 +53,7 @@ public final class EndpointStore: ObservableObject {
     public func setActive(_ endpoint: HermesEndpoint) throws {
         try Keychain.setString(endpoint.url.absoluteString, for: Self.activeURLKey)
         activeEndpoint = endpoint
+        connectionEpoch &+= 1
     }
 
     // MARK: - Persistence

@@ -65,7 +65,6 @@ public struct EndpointEditorView: View {
             url: url,
             displayName: url.host ?? trimmed,
             leafCertFingerprint: endpoint.leafCertFingerprint,
-            bearerToken: nil,
             addedAt: endpoint.addedAt
         )
 

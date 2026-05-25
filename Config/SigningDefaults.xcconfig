@@ -3,6 +3,6 @@
 #include? "LocalSigning.xcconfig"
 
 HERMES_DEVELOPMENT_TEAM =
-HERMES_APP_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOS
-HERMES_TEST_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOSTests
-HERMES_UI_TEST_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOSUITests
+HERMES_APP_BUNDLE_IDENTIFIER = com.example.HermesIOS
+HERMES_TEST_BUNDLE_IDENTIFIER = com.example.HermesIOSTests
+HERMES_UI_TEST_BUNDLE_IDENTIFIER = com.example.HermesIOSUITests

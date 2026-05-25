@@ -15,7 +15,7 @@ A SwiftUI iOS app that loads a user-configured webui URL in a `WKWebView` — th
 
 **Language:** Swift 5.9+
 **Min target:** iOS 16
-**Project gen:** [XcodeGen](https://github.com/yonaskolb/XcodeGen) — `project.yml` is the source of truth, `HermesiOS.xcodeproj` is regenerated, never hand-edited
+**Project gen:** [XcodeGen](https://github.com/yonaskolb/XcodeGen) — `project.yml` is the source of truth, `Hermes_IOS.xcodeproj` is regenerated, never hand-edited
 **Tests:** `swift test` (library targets) + Xcode test action
 Sister repo guidance removed for agnostic setup.
 
@@ -26,13 +26,13 @@ Sister repo guidance removed for agnostic setup.
 ```
 project.yml                   # XcodeGen spec — edit this, not the .xcodeproj
 Package.swift                 # SPM library targets
-Sources/
-  HermesApp/                  # @main, SwiftUI App + root coordinator
+Hermes_IOS/
+  Hermes_IOSApp.swift         # @main, SwiftUI App + root coordinator
   HermesWebView/              # WKWebView wrapper + JS bridge router + nav delegate
   HermesCapabilities/         # iPhone-native APIs — one folder per capability
   HermesCore/                 # AppSettings, Keychain, Logger, HermesEndpoint,
                               # EndpointStore, EndpointQR, FingerprintPinner
-  HermesUI/                   # ConnectHero, EndpointSetup, Settings
+  HermesUI/                   # Connection + settings UI
 Tests/HermesiOSTests/
 docs/QR_PAYLOAD.md            # connect-QR wire format
 ```
@@ -45,13 +45,13 @@ docs/QR_PAYLOAD.md            # connect-QR wire format
 All changes through a named branch + PR. Tests must pass. (Exception: the very first seed commit on an empty repo.)
 
 ### `project.yml` is the source of truth
-Never hand-edit `HermesiOS.xcodeproj`. Modify `project.yml`, then `xcodegen` to regenerate. The `.xcodeproj` is `.gitignore`d.
+Never hand-edit `Hermes_IOS.xcodeproj`. Modify `project.yml`, then `xcodegen` to regenerate. The `.xcodeproj` is `.gitignore`d.
 
 ### Info.plist key parity
 Any Info.plist key the app needs at runtime must be declared in `project.yml` under `targets.HermesiOS.info.properties` (XcodeGen generates the plist).
 
 ### Endpoint protocol versioning
-Every QR payload carries `version`. Bump it in `EndpointQR.Payload`, in `docs/QR_PAYLOAD.md`, and in the Mac side that generates it — *together*, same PR.
+QR payload protocol version is carried in the wire prefix (`hermes:agent:v1:`). If you change protocol shape, bump prefix and docs together.
 
 ### Capabilities are permission-gated
 Every `HermesCapabilities/*` module must:
@@ -63,7 +63,7 @@ If you add a capability and forget the usage description, the app **crashes on l
 
 ---
 
-## WKWebView rules — read before touching `Sources/HermesWebView/`
+## WKWebView rules — read before touching `Hermes_IOS/HermesWebView/`
 
 ### ATS (App Transport Security)
 `http://localhost` is ATS-exempt automatically. Any other `http://` URL — Tailscale magic-DNS, LAN IPs — is **blocked by default**.
@@ -106,7 +106,7 @@ window.hermes.deliverResponse({ id, result, error })
 
 Every capability has:
 
-1. A folder under `Sources/HermesCapabilities/<Name>/`
+1. A folder under `Hermes_IOS/HermesCapabilities/<Name>/`
 2. A type conforming to `Capability` (`name`, `permissionStatus`, `requestPermission`, `invoke(method:params:)`)
 3. (Permission-gated only) A matching `NS*UsageDescription` entry in `project.yml`
 4. Registration in `CapabilityRegistry.registerDefaults()` — lazy, no permission prompts on registration
@@ -151,5 +151,5 @@ When in doubt, slim down. Removing a permission later costs nothing; getting rej
 ## Common gotchas
 
 - **Universal Links / Deep Links** — `hermes://agent?payload=<base64>` is reserved for endpoint-share fallback. Registered in `project.yml` under `CFBundleURLTypes`.
-- **WKWebView and cookies** — `WKWebsiteDataStore` is isolated per app. If the agent expects a shared session with the Mac, plan for token-based auth via the `bearerToken` field on `HermesEndpoint`.
+- **WKWebView and cookies** — `WKWebsiteDataStore` is isolated per app. If the agent expects a shared session, plan for a real auth flow at the webui layer instead of relying on shared cookies.
 - **Camera in Simulator** — no real camera, but the QR scanner's permission gate still works. Test end-to-end on hardware.

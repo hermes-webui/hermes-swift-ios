@@ -1,5 +1,6 @@
 import Foundation
 import os
+import AVFoundation
 import WebKit
 
 /// Owns WKWebView's navigation lifecycle:
@@ -8,7 +9,7 @@ import WebKit
 ///   2. Scheme allowlist — only http/https loads are permitted (no file://, no app schemes).
 ///   3. Failure mapping — translates NSURLError codes into actionable messages (mirrors patterns
 ///      used by the desktop client.
-public final class NavigationDelegate: NSObject, WKNavigationDelegate {
+public final class NavigationDelegate: NSObject, WKNavigationDelegate, WKUIDelegate {
 
     public var pinner: FingerprintPinner?
     public var reconnectGeneration: Int = 0
@@ -61,6 +62,24 @@ public final class NavigationDelegate: NSObject, WKNavigationDelegate {
         handleFailure(error)
     }
 
+    @available(iOS 15.0, *)
+    public func webView(_ webView: WKWebView,
+                        requestMediaCapturePermissionFor origin: WKSecurityOrigin,
+                        initiatedByFrame frame: WKFrameInfo,
+                        type: WKMediaCaptureType,
+                        decisionHandler: @escaping (WKPermissionDecision) -> Void) {
+        switch type {
+        case .microphone:
+            requestAccess(for: .audio, decisionHandler: decisionHandler)
+        case .camera:
+            requestAccess(for: .video, decisionHandler: decisionHandler)
+        case .cameraAndMicrophone:
+            requestCombinedAccess(decisionHandler: decisionHandler)
+        @unknown default:
+            decisionHandler(.deny)
+        }
+    }
+
     private func handleFailure(_ error: Error) {
         let ns = error as NSError
         if ns.code == NSURLErrorCancelled { return }   // -999, ignore (includes pinning aborts)
@@ -76,5 +95,31 @@ public final class NavigationDelegate: NSObject, WKNavigationDelegate {
         }
         Loggers.webView.error("Navigation failed (\(ns.code, privacy: .public)): \(hint, privacy: .public)")
         // TODO: surface to user via an error overlay; logging only for now.
+    }
+
+    @available(iOS 15.0, *)
+    private func requestAccess(for mediaType: AVMediaType,
+                               decisionHandler: @escaping (WKPermissionDecision) -> Void) {
+        switch AVCaptureDevice.authorizationStatus(for: mediaType) {
+        case .authorized:
+            decisionHandler(.grant)
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: mediaType) { granted in
+                decisionHandler(granted ? .grant : .deny)
+            }
+        default:
+            decisionHandler(.deny)
+        }
+    }
+
+    @available(iOS 15.0, *)
+    private func requestCombinedAccess(decisionHandler: @escaping (WKPermissionDecision) -> Void) {
+        requestAccess(for: .video) { [weak self] cameraDecision in
+            guard let self, cameraDecision == .grant else {
+                decisionHandler(.deny)
+                return
+            }
+            self.requestAccess(for: .audio, decisionHandler: decisionHandler)
+        }
     }
 }

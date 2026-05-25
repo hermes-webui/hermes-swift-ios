@@ -13,7 +13,9 @@ enum EndpointURLBuilder {
         }
 
         var components = URLComponents()
-        components.scheme = "http"
+        // Default to HTTPS for secure-context browser features (e.g. microphone/web voice).
+        // Explicit schemes provided by the user (http:// or https://) are preserved above.
+        components.scheme = "https"
 
         // Support IPv6 literals in manual input.
         let bareHost = trimmed.hasPrefix("[") && trimmed.hasSuffix("]")

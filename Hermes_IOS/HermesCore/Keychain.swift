@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-/// Thin Keychain wrapper for storing pairing tokens and other secrets.
+/// Thin Keychain wrapper for storing pairing data and other secrets.
 /// All values are stored as kSecClassGenericPassword scoped to the app's keychain access group.
 public enum Keychain {
 

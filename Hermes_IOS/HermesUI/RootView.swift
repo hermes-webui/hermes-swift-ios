@@ -11,7 +11,6 @@ struct RootView: View {
         static let edgeInset: CGFloat = 26
     }
 
-    @EnvironmentObject var settings: AppSettings
     @EnvironmentObject var store: EndpointStore
     @State private var showingSettings = false
     @State private var launcherXRatio: CGFloat = 0.96
@@ -23,7 +22,7 @@ struct RootView: View {
     var body: some View {
         ZStack {
             if let active = store.activeEndpoint {
-                HermesWebView(endpoint: active, bridge: bridge, reconnectGeneration: settings.reconnectNonce)
+                HermesWebView(endpoint: active, bridge: bridge, reconnectGeneration: store.connectionEpoch)
                     .ignoresSafeArea()
 
                 launcherOverlay

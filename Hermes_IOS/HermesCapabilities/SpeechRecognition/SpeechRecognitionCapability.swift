@@ -7,6 +7,8 @@ import Speech
 /// Methods:
 ///   - `transcribeOnce` — params: `{ locale?: "en-US", timeoutSeconds?: Double }`
 ///                       returns: `{ text: String }`
+///   - `stop`          — params: `{}`
+///                       returns: `{ stopped: true }`
 public final class SpeechRecognitionCapability: Capability, @unchecked Sendable {
     public let name = "speechRecognition"
 
@@ -19,7 +21,7 @@ public final class SpeechRecognitionCapability: Capability, @unchecked Sendable 
 
     public func permissionStatus() async -> PermissionStatus {
         let speechStatus = SFSpeechRecognizer.authorizationStatus()
-        let micGranted = await Self.microphoneGranted()
+        let micGranted = Self.microphoneAuthorizationStatus() == .granted
         switch speechStatus {
         case .authorized:
             return micGranted ? .granted : .denied
@@ -66,6 +68,9 @@ public final class SpeechRecognitionCapability: Capability, @unchecked Sendable 
 
             let text = try await startSingleTranscription(localeID: localeID, timeoutSeconds: timeoutSeconds)
             return .object(["text": .string(text)])
+        case "stop":
+            try await stopRecognition()
+            return .object(["stopped": .bool(true)])
         default:
             throw CapabilityError.unknownMethod(method)
         }
@@ -183,7 +188,20 @@ public final class SpeechRecognitionCapability: Capability, @unchecked Sendable 
         }
     }
 
-    private static func microphoneGranted() async -> Bool {
+    private static func microphoneAuthorizationStatus() -> PermissionStatus {
+        switch AVAudioSession.sharedInstance().recordPermission {
+        case .granted:
+            return .granted
+        case .denied:
+            return .denied
+        case .undetermined:
+            return .notDetermined
+        @unknown default:
+            return .notDetermined
+        }
+    }
+
+    private static func microphoneGrantedPrompt() async -> Bool {
         await withCheckedContinuation { continuation in
             AVAudioSession.sharedInstance().requestRecordPermission { granted in
                 continuation.resume(returning: granted)
@@ -192,6 +210,7 @@ public final class SpeechRecognitionCapability: Capability, @unchecked Sendable 
     }
 
     private static func requestMicrophonePermission() async -> Bool {
-        await microphoneGranted()
+        if microphoneAuthorizationStatus() == .granted { return true }
+        return await microphoneGrantedPrompt()
     }
 }

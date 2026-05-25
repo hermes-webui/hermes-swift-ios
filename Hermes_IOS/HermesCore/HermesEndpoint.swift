@@ -18,20 +18,15 @@ public struct HermesEndpoint: Codable, Hashable, Sendable, Identifiable {
     /// about defending; leave nil for plain `http://` localhost dev.
     public let leafCertFingerprint: String?
 
-    /// Reserved for backward compatibility with older endpoint payloads.
-    public let bearerToken: String?
-
     public let addedAt: Date
 
     public init(url: URL,
                 displayName: String,
                 leafCertFingerprint: String? = nil,
-                bearerToken: String? = nil,
                 addedAt: Date = .init()) {
         self.url = url
         self.displayName = displayName
         self.leafCertFingerprint = leafCertFingerprint?.lowercased()
-        self.bearerToken = bearerToken
         self.addedAt = addedAt
     }
 }

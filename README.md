@@ -1,6 +1,6 @@
 # hermes-swift-ios
 
-Native iPhone client for webui access over Tailscale.
+Native iPhone client for connecting to a webui over Tailscale.
 
 ## Connection Flow (Tailscale)
 
@@ -10,14 +10,14 @@ Native iPhone client for webui access over Tailscale.
 4. In the iPhone app, open **Connections**.
 5. Connect by either:
    - scanning a connection QR code, or
-   - entering `tailscale-ip:port` or `tailnet-hostname:port`.
+   - entering `tailscale-ip[:port]` or `tailnet-hostname[:port]`.
 6. If no port is provided, the app uses `8787`.
 
 ## Permissions Used
 
 - `NSCameraUsageDescription` (QR scanning)
-- `NSMicrophoneUsageDescription` (voice input features)
-- `NSSpeechRecognitionUsageDescription` (speech-to-text)
+- `NSMicrophoneUsageDescription` (voice input when activated from webui)
+- `NSSpeechRecognitionUsageDescription` (speech-to-text when activated from webui)
 - Notifications permission (requested when In-app notifications is turned on)
 
 ## Capability Surface

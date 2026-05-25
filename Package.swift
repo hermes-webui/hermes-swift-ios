@@ -16,28 +16,28 @@ let package = Package(
     targets: [
         .target(
             name: "HermesCore",
-            path: "Sources/HermesCore"
+            path: "Hermes_IOS/HermesCore"
         ),
         .target(
             name: "HermesCapabilities",
             dependencies: ["HermesCore"],
-            path: "Sources/HermesCapabilities"
+            path: "Hermes_IOS/HermesCapabilities"
         ),
         .target(
             name: "HermesWebView",
             dependencies: ["HermesCore", "HermesCapabilities"],
-            path: "Sources/HermesWebView"
+            path: "Hermes_IOS/HermesWebView"
         ),
         .target(
             name: "HermesUI",
             dependencies: ["HermesCore", "HermesCapabilities"],
-            path: "Sources/HermesUI"
+            path: "Hermes_IOS/HermesUI"
         ),
         .target(
             name: "HermesApp",
             dependencies: ["HermesCore", "HermesCapabilities", "HermesWebView", "HermesUI"],
-            path: "Sources/HermesApp",
-            exclude: ["Info.plist", "PrivacyInfo.xcprivacy"]
+            path: "Hermes_IOS",
+            exclude: ["Info.plist", "Assets.xcassets", "HermesApp"]
         ),
         .testTarget(
             name: "HermesiOSTests",

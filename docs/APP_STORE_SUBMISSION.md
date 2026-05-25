@@ -4,20 +4,20 @@ Working notes for the human submitting hermes-swift-ios to App Store Connect. Ke
 
 ## Pre-flight checklist
 
-- [ ] `xcodegen && xcodebuild -project HermesiOS.xcodeproj -scheme HermesiOS -destination 'generic/platform=iOS' archive` succeeds
+- [ ] `xcodegen && xcodebuild -project Hermes_IOS.xcodeproj -scheme Hermes_IOS -destination 'generic/platform=iOS' archive` succeeds
 - [ ] `PrivacyInfo.xcprivacy` is in the app bundle (Settings → Privacy Report on a built TestFlight build should show "No data collected")
 - [ ] `ITSAppUsesNonExemptEncryption=false` is in Info.plist (set via `project.yml`) — no encryption-classification prompt on upload
 - [ ] All declared `NS*UsageDescription` keys have a real corresponding user-facing flow (`NSCameraUsageDescription` → QR scanner)
 - [ ] No `UIBackgroundModes` declared
 - [ ] No VPN / NetworkExtension entitlements
 - [ ] CapabilityRegistry's auto-registered set matches the README's capability table (test: `CapabilityRegistryTests`)
-- [ ] Bundle ID configured in your Apple Developer team (`com.hermeswebui.HermesiOS` or your override)
+- [ ] Bundle ID configured in your Apple Developer team (set via your local signing override)
 
 ## App Privacy questionnaire answers
 
 Fill in App Store Connect → App Privacy:
 
-- **Data collected**: None. Endpoint URLs, fingerprints, and tokens are stored locally in the iOS Keychain; nothing is transmitted to us or to third parties.
+- **Data collected**: None. Endpoint URLs and fingerprints are stored locally in the iOS Keychain; nothing is transmitted to us or to third parties.
 - **Tracking**: No.
 - **Required APIs**: declared in `PrivacyInfo.xcprivacy` — currently only `NSPrivacyAccessedAPICategoryUserDefaults` with reason `CA92.1` (the AppSettings onboarding flag).
 
@@ -28,26 +28,26 @@ If you later add capabilities that touch additional required-reason APIs (Photos
 Copy this into the Notes field, edit demo URL/credentials:
 
 ```
-Hermes is an iOS client for webui (https://github.com/hermes-webui),
+This app is an iOS client for a webui,
 an open-source local-first agent runtime that ships its own browser-based dashboard.
 This app embeds that dashboard in a WKWebView, pointed at a user-configured agent URL,
 and adds a JavaScript bridge that gives the agent access to iPhone-native APIs
 (camera, notifications, share sheet, clipboard, haptics, document picker,
 text-to-speech, QR generation).
 
-The recommended user setup is Tailscale on both the Mac (hosting the agent) and the
+The recommended user setup is Tailscale on both the machine hosting the webui and the
 iPhone, which gives the agent a stable, privately-routable hostname reachable from
 anywhere. The app itself is reachability-agnostic and accepts any URL the user enters.
 
 Native value over a web wrapper:
  - QR-based pairing with TLS leaf-cert fingerprint pinning (HermesCore.FingerprintPinner)
- - Keychain-backed endpoint storage with optional bearer-token injection
+ - Keychain-backed endpoint storage
  - 12 native capabilities exposed to the dashboard JS via WKScriptMessageHandler
  - iOS-native onboarding, settings, and connection management (SwiftUI)
 
 To test the app, please use the following demo credentials:
    Endpoint URL: <FILL IN — point at a public webui you spin up for review>
-   OR: tap "Add another Hermes" → paste this QR string:
+   OR: open Connections and paste this QR string:
    hermes:agent:v1:<FILL IN — generate via EndpointQR.encode(...)>
 
 NSAllowsArbitraryLoadsInWebContent is enabled because webui is commonly
@@ -63,7 +63,7 @@ deep link.
 
 ## Setting up a demo agent for review
 
-Apple's reviewers cannot reach a Mac on your home network. They need a publicly accessible webui endpoint to exercise the app. Options:
+Apple's reviewers cannot reach a private machine on your home network. They need a publicly accessible webui endpoint to exercise the app. Options:
 
 1. **Spin up a temporary public webui** on a small VPS, generate the connect QR with `EndpointQR.encode(...)`, paste the resulting `hermes:agent:v1:...` string into the reviewer notes. Decommission after the build is approved.
 2. **Use a tunnel** — `cloudflared tunnel` or `ngrok` exposing your local webui for the duration of review. Free, fast to set up, but leaves your agent publicly accessible while the tunnel is up.

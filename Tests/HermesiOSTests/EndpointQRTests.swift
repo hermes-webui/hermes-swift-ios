@@ -7,8 +7,7 @@ final class EndpointQRTests: XCTestCase {
         let payload = EndpointQR.Payload(
             url: "https://hermes.tailnet.ts.net",
             displayName: "Home",
-            leafCertFingerprint: "a1b2c3",
-            bearerToken: "tk-xyz"
+            leafCertFingerprint: "a1b2c3"
         )
         let encoded = try EndpointQR.encode(payload)
         XCTAssertTrue(encoded.hasPrefix("hermes:agent:v1:"))
@@ -20,8 +19,7 @@ final class EndpointQRTests: XCTestCase {
         let payload = EndpointQR.Payload(
             url: "http://hermes.local:8787",
             displayName: "LAN dev",
-            leafCertFingerprint: nil,
-            bearerToken: nil
+            leafCertFingerprint: nil
         )
         let qr = try EndpointQR.encode(payload)
         let b64 = String(qr.split(separator: ":", maxSplits: 3, omittingEmptySubsequences: false)[3])
@@ -34,8 +32,7 @@ final class EndpointQRTests: XCTestCase {
         let payload = EndpointQR.Payload(
             url: "https://example.com",
             displayName: "Example",
-            leafCertFingerprint: "DEADBEEF",   // intentionally uppercase to test normalization
-            bearerToken: nil
+            leafCertFingerprint: "DEADBEEF"   // intentionally uppercase to test normalization
         )
         let endpoint = try EndpointQR.endpoint(from: payload)
         XCTAssertEqual(endpoint.url.absoluteString, "https://example.com")

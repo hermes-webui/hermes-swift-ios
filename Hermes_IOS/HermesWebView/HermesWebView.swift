@@ -21,6 +21,7 @@ public struct HermesWebView: UIViewRepresentable {
         let config = WebViewConfiguration.make(bridge: bridge)
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
         bridge.attach(to: webView)
         webView.load(makeRequest())

@@ -17,28 +17,22 @@ public enum EndpointQR {
     }
 
     public struct Payload: Codable, Equatable, Sendable {
-        public let version: Int
         public let url: String
         public let displayName: String
         public let leafCertFingerprint: String?
-        public let bearerToken: String?
 
-        public init(version: Int = 1,
-                    url: String,
+        public init(url: String,
                     displayName: String,
-                    leafCertFingerprint: String? = nil,
-                    bearerToken: String? = nil) {
-            self.version = version
+                    leafCertFingerprint: String? = nil) {
             self.url = url
             self.displayName = displayName
             self.leafCertFingerprint = leafCertFingerprint
-            self.bearerToken = bearerToken
         }
     }
 
     public static func encode(_ payload: Payload) throws -> String {
         let data = try JSONEncoder().encode(payload)
-        return "hermes:agent:v\(payload.version):\(data.base64URLEncodedString())"
+        return "hermes:agent:v1:\(data.base64URLEncodedString())"
     }
 
     public static func decode(_ raw: String) throws -> Payload {
@@ -68,8 +62,7 @@ public enum EndpointQR {
         return HermesEndpoint(
             url: url,
             displayName: payload.displayName,
-            leafCertFingerprint: payload.leafCertFingerprint,
-            bearerToken: nil
+            leafCertFingerprint: payload.leafCertFingerprint
         )
     }
 }

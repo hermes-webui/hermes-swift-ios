@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated and managed by XcodeGen (see project.yml). The keys listed in
-     project.yml under targets.HermesiOS.info.properties are the source of truth.
-     This file exists as a placeholder so SPM can build HermesApp as a library target. -->
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict/>
-</plist>

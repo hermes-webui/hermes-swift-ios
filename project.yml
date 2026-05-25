@@ -1,6 +1,6 @@
 name: HermesiOS
 options:
-  bundleIdPrefix: com.hermeswebui
+  bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "16.0"
   createIntermediateGroups: true
@@ -23,8 +23,10 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: Sources/HermesApp
-      - path: Sources/HermesApp/PrivacyInfo.xcprivacy
+      - path: Hermes_IOS
+      - path: Hermes_IOS/Info.plist
+        buildPhase: resources
+      - path: Hermes_IOS/Assets.xcassets
         buildPhase: resources
     dependencies:
       - package: HermesiOSLib
@@ -39,12 +41,12 @@ targets:
         product: HermesCore
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.hermeswebui.HermesiOS
+        PRODUCT_BUNDLE_IDENTIFIER: $(HERMES_APP_BUNDLE_IDENTIFIER)
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
     info:
-      path: Sources/HermesApp/Info.plist
+      path: Hermes_IOS/Info.plist
       properties:
         CFBundleDisplayName: Hermes
         CFBundleShortVersionString: "0.1.0"
@@ -64,7 +66,7 @@ targets:
           NSAllowsArbitraryLoadsInWebContent: true
         # Custom URL scheme for endpoint-share fallback (hermes://agent?payload=<base64>).
         CFBundleURLTypes:
-          - CFBundleURLName: com.hermeswebui.HermesiOS.endpoint
+          - CFBundleURLName: com.example.HermesIOS.endpoint
             CFBundleURLSchemes:
               - hermes
 

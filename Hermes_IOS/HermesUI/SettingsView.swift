@@ -17,6 +17,7 @@ public struct SettingsView: View {
     private let onConnected: (() -> Void)?
     @Environment(\.openURL) private var openURL
 
+    @MainActor
     public init(store: EndpointStore = .shared, connectionOnly: Bool = false, onConnected: (() -> Void)? = nil) {
         self.store = store
         self.connectionOnly = connectionOnly
@@ -129,7 +130,6 @@ public struct SettingsView: View {
                             .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                 Button("Reconnect") {
                                     try? store.setActive(endpoint)
-                                    settings.triggerReconnect()
                                     fireConnectSuccessHaptic()
                                     onConnected?()
                                 }
@@ -152,17 +152,6 @@ public struct SettingsView: View {
                 }
 
                 if !connectionOnly {
-                    Section("Experience") {
-                        Picker("Voice input mode", selection: $settings.voiceInputMode) {
-                            Text("Push to talk").tag(AppSettings.VoiceInputMode.pushToTalk)
-                            Text("Realtime").tag(AppSettings.VoiceInputMode.realtime)
-                        }
-
-                        Text("Realtime mode is optimized for continuous listen-and-respond behavior, including background and lock-screen use when iOS allows.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-
                     Section("Notifications") {
                         Toggle("In-app notifications", isOn: $settings.inAppNotificationsEnabled)
                             .onChange(of: settings.inAppNotificationsEnabled) { enabled in

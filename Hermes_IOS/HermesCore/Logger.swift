@@ -3,7 +3,7 @@ import os
 
 /// Centralized loggers for each subsystem. Use os.Logger for performance and Console.app discoverability.
 public enum Loggers {
-    public static let subsystem = "com.hermeswebui.HermesiOS"
+    public static let subsystem = "app.webui.client.ios"
 
     public static let app          = Logger(subsystem: subsystem, category: "app")
     public static let webView      = Logger(subsystem: subsystem, category: "webview")

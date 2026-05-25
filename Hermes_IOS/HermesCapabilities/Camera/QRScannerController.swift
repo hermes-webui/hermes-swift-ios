@@ -19,7 +19,7 @@ public final class QRScannerController: UIViewController {
 
     private let session = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer!
-    private let sessionQueue = DispatchQueue(label: "com.hermeswebui.qrscanner.session")
+    private let sessionQueue = DispatchQueue(label: "app.webui.client.ios.qrscanner.session")
     private var configured = false
     private var paused = false
 
