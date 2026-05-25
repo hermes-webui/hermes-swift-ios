@@ -2,7 +2,7 @@
 
 Native iPhone client for webui access over Tailscale.
 
-## Connection Flow (Tailscale only)
+## Connection Flow (Tailscale)
 
 1. Install Tailscale on the machine running your webui and on iPhone.
 2. Sign in to the same tailnet on both.
