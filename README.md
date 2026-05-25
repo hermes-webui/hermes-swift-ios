@@ -19,10 +19,6 @@ Re-connect or add another endpoint? Same flow in *Connections*.
 
 > You don't *have* to use Tailscale — the app accepts any URL. See [Reachability](#reachability--not-in-this-app) below for the full set of options if you have a different setup.
 
-## Reachability — not in this app
-
-The iPhone reaches the WebUI URL however the user already does. We do not run a relay, a coordination server, or any infrastructure for this. **Set up reachability once at the WebUI layer** and every Hermes client inherits it.
-
 ### Tailscale — the recommended setup
 
 This is the path we recommend, and it's the assumption the rest of the docs are written against. It's the only setup that gives you:
@@ -39,19 +35,6 @@ Steps:
 3. Run Hermes WebUI on that machine
 4. Generate/share the iPhone connect QR (or copy host + password)
 5. Scan from the iPhone — done
-
-### Other options that work
-
-The app accepts any URL, so you can skip Tailscale if you already have one of these set up:
-
-| Setup | When it fits | Difficulty |
-| --- | --- | --- |
-| **Tailscale** | Default; reach WebUI from anywhere | 5 min, both devices |
-| LAN-only (`http://hermes.local:8787`) | Home use; phone and WebUI machine on same WiFi | Trivial — works out of the box |
-| Public domain + Let's Encrypt | You run WebUI on a dedicated server with DNS | 1 hour, needs DNS |
-| Cloudflare Tunnel / ngrok / frp | Quick public exposure of self-hosted WebUI without opening router ports | 10 min, needs account setup |
-
-We don't bundle or require any of these — Tailscale is highlighted because it's the lowest-friction "works from anywhere" answer on Apple devices, and the path with the smallest blast radius (no machine becomes publicly addressable, no router config).
 
 ## What the JS bridge exposes
 
