@@ -31,8 +31,6 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is used to scan QR codes for webui connections.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Face ID is used to authenticate sensitive actions requested by connected webui tools.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is used for voice input and speech-to-text features.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

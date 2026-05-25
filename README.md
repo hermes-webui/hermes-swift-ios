@@ -16,7 +16,6 @@ Native iPhone client for webui access over Tailscale.
 ## Permissions Used
 
 - `NSCameraUsageDescription` (QR scanning)
-- `NSFaceIDUsageDescription` (biometric auth capability)
 - `NSMicrophoneUsageDescription` (voice input features)
 - `NSSpeechRecognitionUsageDescription` (speech-to-text)
 - Notifications permission (requested when In-app notifications is turned on)
@@ -24,7 +23,6 @@ Native iPhone client for webui access over Tailscale.
 ## Capability Surface
 
 - Camera / QR
-- Biometrics
 - Notifications
 - Share sheet
 - Clipboard

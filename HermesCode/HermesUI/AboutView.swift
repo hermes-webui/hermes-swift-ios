@@ -20,7 +20,7 @@ public struct AboutView: View {
 
                     Group {
                         sectionHeader("What it does")
-                        Text("Loads your configured webui in a WebKit view and gives it access to phone-native APIs — camera, biometrics, notifications, share sheet, clipboard, haptics, document picker, text-to-speech, QR generation, and more — via a JavaScript bridge.")
+                        Text("Loads your configured webui in a WebKit view and gives it access to phone-native APIs — camera, notifications, share sheet, clipboard, haptics, document picker, text-to-speech, QR generation, and more — via a JavaScript bridge.")
 
                         sectionHeader("How you connect")
                         Text("Scan the QR shown by Hermes on your Mac, or paste your agent URL. The URL plus optional TLS fingerprint and bearer token are stored in the iOS Keychain. The app does not transmit your data anywhere except to the agent endpoint you configured.")

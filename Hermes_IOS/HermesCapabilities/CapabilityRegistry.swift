@@ -35,7 +35,6 @@ public actor CapabilityRegistry {
     public func registerDefaults() {
         // Permission-gated (declared in project.yml)
         register(CameraCapability())            // NSCameraUsageDescription
-        register(BiometricsCapability())        // NSFaceIDUsageDescription
         register(NotificationsCapability())     // requested at runtime
         // No-permission utility capabilities.
         register(ShareSheetCapability())

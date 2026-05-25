@@ -7,7 +7,7 @@ Working notes for the human submitting hermes-swift-ios to App Store Connect. Ke
 - [ ] `xcodegen && xcodebuild -project HermesiOS.xcodeproj -scheme HermesiOS -destination 'generic/platform=iOS' archive` succeeds
 - [ ] `PrivacyInfo.xcprivacy` is in the app bundle (Settings → Privacy Report on a built TestFlight build should show "No data collected")
 - [ ] `ITSAppUsesNonExemptEncryption=false` is in Info.plist (set via `project.yml`) — no encryption-classification prompt on upload
-- [ ] All declared `NS*UsageDescription` keys have a real corresponding user-facing flow (`NSCameraUsageDescription` → QR scanner; `NSFaceIDUsageDescription` → BiometricsCapability)
+- [ ] All declared `NS*UsageDescription` keys have a real corresponding user-facing flow (`NSCameraUsageDescription` → QR scanner)
 - [ ] No `UIBackgroundModes` declared
 - [ ] No VPN / NetworkExtension entitlements
 - [ ] CapabilityRegistry's auto-registered set matches the README's capability table (test: `CapabilityRegistryTests`)
@@ -32,7 +32,7 @@ Hermes is an iOS client for webui (https://github.com/hermes-webui),
 an open-source local-first agent runtime that ships its own browser-based dashboard.
 This app embeds that dashboard in a WKWebView, pointed at a user-configured agent URL,
 and adds a JavaScript bridge that gives the agent access to iPhone-native APIs
-(camera, biometrics, notifications, share sheet, clipboard, haptics, document picker,
+(camera, notifications, share sheet, clipboard, haptics, document picker,
 text-to-speech, QR generation).
 
 The recommended user setup is Tailscale on both the Mac (hosting the agent) and the
@@ -77,7 +77,7 @@ Without one of these, the most likely outcome is a Guideline 4.2 / 2.1 rejection
 - **Subsequent updates**: usually 24h or less once your bundle ID has a clean review history.
 - **Common rejection reasons we've designed against**:
   - "Just a website wrapper" → the 12 native capabilities + native onboarding answer this.
-  - "Requests permissions you don't use" → only `NSCameraUsageDescription` + `NSFaceIDUsageDescription` declared, both with real flows.
+  - "Requests permissions you don't use" → only `NSCameraUsageDescription` declared, with a real flow.
   - "VPN/background-mode entitlement without justification" → we don't request either.
 
 ## Future capability additions and review impact

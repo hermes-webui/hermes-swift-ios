@@ -58,7 +58,6 @@ targets:
           UIColorName: ""
         # Permission strings — only what real flows actually exercise.
         NSCameraUsageDescription: "This app uses the camera to scan a QR code for webui connection setup."
-        NSFaceIDUsageDescription: "This app uses Face ID to authorize sensitive actions on this device."
         # ATS: allow non-HTTPS in WebView content for LAN dev (Tailscale magic-DNS hostnames are HTTPS).
         # Native networking is unaffected.
         NSAppTransportSecurity:

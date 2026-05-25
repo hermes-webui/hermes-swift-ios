@@ -42,8 +42,6 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>This app uses the camera to scan a QR code for webui connection setup.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>This app uses Face ID to authorize sensitive actions on this device.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app uses the microphone for voice input to webui features.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

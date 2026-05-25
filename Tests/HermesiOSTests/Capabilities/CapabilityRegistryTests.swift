@@ -11,7 +11,7 @@ final class CapabilityRegistryTests: XCTestCase {
         // framework imports out of the binary — Apple's privacy-manifest scanning flags imports without
         // matching usage descriptions. See CapabilityRegistry.swift for the rationale.
         let expected: Set<String> = [
-            "camera", "biometrics", "notifications", "share",
+            "camera", "notifications", "share",
             "clipboard", "haptics", "deviceInfo", "openURL",
             "appBadge", "speech", "qrGenerator", "documentPicker",
         ]

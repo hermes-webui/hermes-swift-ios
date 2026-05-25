@@ -8,7 +8,7 @@
 
 A SwiftUI iOS app that loads a user-configured webui URL in a `WKWebView` — the same dashboard the desktop app loads — and adds two things the web UI can't do alone:
 
-1. **iPhone-native capabilities surfaced into the web UI** — `WKScriptMessageHandler` JS bridge (`window.hermes.invoke(...)`). Camera, share sheet, biometrics, notifications today; more as the app grows.
+1. **iPhone-native capabilities surfaced into the web UI** — `WKScriptMessageHandler` JS bridge (`window.hermes.invoke(...)`). Camera, share sheet, notifications today; more as the app grows.
 2. **A native-feeling onboarding + endpoint setup** — first launch is a scan-to-connect screen, paired endpoints persist in the Keychain, optional TLS leaf-cert pinning via QR-carried fingerprint.
 
 **This app does NOT** run a bridge protocol to the Mac, operate any relay or coordination server, or solve cross-network reachability. The iPhone reaches the agent URL via whatever path the user already has set up — the documented and recommended path is **Tailscale on both devices**, but the app accepts any URL (LAN, public domain, Cloudflare Tunnel, ngrok).
@@ -116,7 +116,7 @@ The registry's job is to be the single place the JS bridge looks up capability h
 
 ### Auto-registered at v0.1
 
-Permission-gated: `camera` (`NSCameraUsageDescription`), `biometrics` (`NSFaceIDUsageDescription`), `notifications` (runtime prompt).
+Permission-gated: `camera` (`NSCameraUsageDescription`), `notifications` (runtime prompt).
 No-permission utilities: `share`, `clipboard`, `haptics`, `deviceInfo`, `openURL`, `appBadge`, `speech` (TTS), `qrGenerator`, `documentPicker`.
 
 ### Deliberately NOT in the binary
@@ -131,7 +131,7 @@ Same applies to future `photos`, `calendar`, `reminders`, `microphone`, `speechR
 
 We trim the surface area to only what's actually used so reviews stay fast.
 
-**Permission strings:** Only declare an `NS*UsageDescription` in `project.yml` in the **same PR** that wires up the user-facing flow which triggers it. Apple flags "requesting permissions you don't use." Currently declared: `NSCameraUsageDescription` (QR connect scanner), `NSFaceIDUsageDescription` (BiometricsCapability).
+**Permission strings:** Only declare an `NS*UsageDescription` in `project.yml` in the **same PR** that wires up the user-facing flow which triggers it. Apple flags "requesting permissions you don't use." Currently declared: `NSCameraUsageDescription` (QR connect scanner).
 
 **High-scrutiny permissions** — get a second look before adding:
 
