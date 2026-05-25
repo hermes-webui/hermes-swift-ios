@@ -44,6 +44,19 @@ public enum WebViewConfiguration {
         let userScript = WKUserScript(source: stub, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         userContent.addUserScript(userScript)
 
+        let voiceMode = AppSettings.shared.voiceInputMode.rawValue
+        let bgVoice = "true"
+        let prefsScript = """
+        window.hermesNativePreferences = {
+          voiceInputMode: "\(voiceMode)",
+          backgroundVoiceMode: \(bgVoice)
+        };
+        try { localStorage.setItem("hermes_voice_input_mode", "\(voiceMode)"); } catch (_) {}
+        try { localStorage.setItem("hermes_background_voice_mode", "\(bgVoice)"); } catch (_) {}
+        """
+        let settingsUserScript = WKUserScript(source: prefsScript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        userContent.addUserScript(settingsUserScript)
+
         config.userContentController = userContent
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []

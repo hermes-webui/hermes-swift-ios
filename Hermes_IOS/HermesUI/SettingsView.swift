@@ -1,22 +1,40 @@
 import SwiftUI
+import AVFoundation
+import Foundation
+import UIKit
+import UserNotifications
 
 public struct SettingsView: View {
     @EnvironmentObject var settings: AppSettings
     @ObservedObject var store: EndpointStore
     @State private var editingEndpoint: HermesEndpoint?
     @State private var manualHost: String = ""
-    @State private var manualSecret: String = ""
     @State private var manualError: String?
+    @State private var notificationsError: String?
     @State private var manualWorking = false
     @State private var showingScanner = false
+    private let connectionOnly: Bool
+    private let onConnected: (() -> Void)?
     @Environment(\.openURL) private var openURL
 
-    public init(store: EndpointStore = .shared) { self.store = store }
+    public init(store: EndpointStore = .shared, connectionOnly: Bool = false, onConnected: (() -> Void)? = nil) {
+        self.store = store
+        self.connectionOnly = connectionOnly
+        self.onConnected = onConnected
+    }
 
     public var body: some View {
         NavigationStack {
             Form {
-                Section("Connections") {
+                if connectionOnly {
+                    Section {
+                        Color.clear
+                            .frame(height: 20)
+                            .listRowBackground(Color.clear)
+                    }
+                }
+
+                Section {
                     HStack {
                         Spacer()
                         Button {
@@ -30,74 +48,39 @@ public struct SettingsView: View {
                         Spacer()
                     }
 
-                    Text("1) Sign in to Tailscale on both devices.\n2) Confirm both are Connected.\n3) Connect with QR or manual fields.")
+                    Text("1) Install Tailscale on your phone and the machine running your webui.\n2) Sign in on both and make sure both are connected.\n3) Scan a QR code or enter the Tailscale IP/hostname for the webui.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
-                    HStack {
+                    HStack(spacing: 10) {
+                        TextField("Tailscale IP[:port]", text: $manualHost)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(.system(.body, design: .monospaced))
+
                         Button {
-                            showingScanner = true
+                            startQRScan()
                         } label: {
-                            VStack(spacing: 6) {
-                                Image(systemName: "qrcode.viewfinder")
-                                    .font(.title3)
-                                Text("Scan QR")
-                                    .font(.caption.weight(.semibold))
-                            }
-                            .frame(width: 88, height: 52)
+                            Image(systemName: "qrcode.viewfinder")
+                                .font(.title3.weight(.semibold))
+                                .frame(width: 30, height: 30)
                         }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    HStack(spacing: 12) {
-                        Rectangle().fill(.secondary.opacity(0.25)).frame(height: 1)
-                        Text("or")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        Rectangle().fill(.secondary.opacity(0.25)).frame(height: 1)
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Scan QR")
                     }
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Manual")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-
-                        VStack(spacing: 0) {
-                            TextField("Tailnet host or username", text: $manualHost)
-                                .keyboardType(.URL)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .font(.system(.body, design: .monospaced))
-                                .padding(.vertical, 10)
-
-                            Divider()
-
-                            SecureField("WebUI password", text: $manualSecret)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .font(.system(.body, design: .monospaced))
-                                .padding(.vertical, 10)
-                        }
-                        .padding(.horizontal, 12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .strokeBorder(.secondary.opacity(0.22), lineWidth: 1)
-                        )
-
+                    HStack {
+                        Spacer()
                         Button(manualWorking ? "Connecting…" : "Connect") {
                             Task { await saveManualConnection() }
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(manualHost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || manualWorking)
-
-                        Text("Password hint: set `HERMES_WEBUI_PASSWORD` on the WebUI machine.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                        Spacer()
                     }
-                    .padding(.top, 2)
 
-                    Text("Default port is `8787`.")
+                    Text("Assumes port 8787 if none are used. Will accept any port after ip. `ip:port`")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
@@ -128,6 +111,8 @@ public struct SettingsView: View {
                                 } else {
                                     Button("Use") {
                                         try? store.setActive(endpoint)
+                                        fireConnectSuccessHaptic()
+                                        onConnected?()
                                     }
                                     .buttonStyle(.bordered)
                                 }
@@ -145,6 +130,8 @@ public struct SettingsView: View {
                                 Button("Reconnect") {
                                     try? store.setActive(endpoint)
                                     settings.triggerReconnect()
+                                    fireConnectSuccessHaptic()
+                                    onConnected?()
                                 }
                                 .tint(.green)
                             }
@@ -155,11 +142,52 @@ public struct SettingsView: View {
                             }
                         }
                     }
+                } header: {
+                    if connectionOnly {
+                        Text("Connect to WebUI")
+                            .font(.title2.weight(.semibold))
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .textCase(nil)
+                    }
+                }
+
+                if !connectionOnly {
+                    Section("Experience") {
+                        Picker("Voice input mode", selection: $settings.voiceInputMode) {
+                            Text("Push to talk").tag(AppSettings.VoiceInputMode.pushToTalk)
+                            Text("Realtime").tag(AppSettings.VoiceInputMode.realtime)
+                        }
+
+                        Text("Realtime mode is optimized for continuous listen-and-respond behavior, including background and lock-screen use when iOS allows.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Section("Notifications") {
+                        Toggle("In-app notifications", isOn: $settings.inAppNotificationsEnabled)
+                            .onChange(of: settings.inAppNotificationsEnabled) { enabled in
+                                guard enabled else {
+                                    notificationsError = nil
+                                    return
+                                }
+                                Task { await ensureNotificationPermissionForToggle() }
+                            }
+                        Button("Open iOS notification settings") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                openURL(url)
+                            }
+                        }
+                        if let notificationsError {
+                            Text(notificationsError)
+                                .font(.footnote)
+                                .foregroundStyle(.red)
+                        }
+                    }
                 }
 
             }
-            .navigationTitle("Connections")
-            .toolbar { EditButton() }
+            .navigationTitle(connectionOnly ? "" : "Connections")
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(item: $editingEndpoint) { endpoint in
                 EndpointEditorView(store: store, endpoint: endpoint)
             }
@@ -183,10 +211,12 @@ public struct SettingsView: View {
             let payload = try EndpointQR.decode(raw)
             let endpoint = try EndpointQR.endpoint(from: payload)
             try store.add(endpoint, activate: true)
+            fireConnectSuccessHaptic()
+            onConnected?()
         } catch EndpointQR.Error.invalidEncoding {
-            manualError = "That doesn't look like a Hermes connect code. It should start with \"hermes:agent:v1:\"."
+            manualError = "That doesn't look like a valid connect code."
         } catch EndpointQR.Error.unsupportedVersion(let v) {
-            manualError = "This Mac is using share protocol v\(v); update Hermes on either the Mac or the iPhone."
+            manualError = "Unsupported connect code version (v\(v)). Update the app and webui to compatible versions."
         } catch {
             manualError = error.localizedDescription
         }
@@ -199,27 +229,66 @@ public struct SettingsView: View {
 
         let host = manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !host.isEmpty else {
-            manualError = "Enter a Tailscale host."
+            manualError = "Enter a WebUI host."
             return
         }
 
-        let normalized = host.contains("://") ? host : "http://\(host.contains(":") ? host : "\(host):8787")"
-        guard let url = URL(string: normalized), let scheme = url.scheme?.lowercased(),
-              ["http", "https"].contains(scheme) else {
+        guard let url = EndpointURLBuilder.makeURL(from: host) else {
             manualError = "Host must be a valid IP or hostname."
             return
         }
 
-        let secret = manualSecret.trimmingCharacters(in: .whitespacesAndNewlines)
         let endpoint = HermesEndpoint(
             url: url,
-            displayName: host,
-            bearerToken: secret.isEmpty ? nil : secret
+            displayName: host
         )
         do {
             try store.add(endpoint, activate: true)
+            fireConnectSuccessHaptic()
+            onConnected?()
         } catch {
             manualError = error.localizedDescription
         }
+    }
+
+    private func startQRScan() {
+        manualError = nil
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            showingScanner = true
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        showingScanner = true
+                    } else {
+                        manualError = "Camera permission was denied."
+                    }
+                }
+            }
+        case .denied, .restricted:
+            manualError = "Camera permission was denied."
+        @unknown default:
+            manualError = "Camera permission status is unavailable."
+        }
+    }
+
+    private func ensureNotificationPermissionForToggle() async {
+        notificationsError = nil
+        let granted = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        if !granted {
+            settings.inAppNotificationsEnabled = false
+            notificationsError = "Notification permission was denied."
+        }
+    }
+
+    private func fireSuccessHaptic() {
+        let gen = UINotificationFeedbackGenerator()
+        gen.prepare()
+        gen.notificationOccurred(.success)
+    }
+
+    private func fireConnectSuccessHaptic() {
+        fireSuccessHaptic()
     }
 }

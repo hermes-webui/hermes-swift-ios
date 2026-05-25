@@ -37,10 +37,6 @@ public struct HermesWebView: UIViewRepresentable {
     }
 
     private func makeRequest() -> URLRequest {
-        var request = URLRequest(url: endpoint.url)
-        if let token = endpoint.bearerToken {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        return request
+        URLRequest(url: endpoint.url)
     }
 }

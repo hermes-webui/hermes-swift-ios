@@ -116,7 +116,7 @@ public final class QRScannerController: UIViewController {
 
         let hint = UILabel()
         hint.translatesAutoresizingMaskIntoConstraints = false
-        hint.text = "Align the QR code from your Mac inside the frame"
+        hint.text = "Align the webui QR code inside the frame"
         hint.textColor = .white
         hint.numberOfLines = 0
         hint.textAlignment = .center

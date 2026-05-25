@@ -4,7 +4,6 @@ import SwiftUI
 public struct ConnectHeroView: View {
     @ObservedObject var store: EndpointStore
     @State private var manualHost: String = ""
-    @State private var manualSecret: String = ""
     @State private var error: String?
     @State private var working = false
     @State private var showingScanner = false
@@ -32,12 +31,12 @@ public struct ConnectHeroView: View {
                     Text("Connect")
                         .font(.largeTitle.weight(.semibold))
                         .foregroundStyle(.white)
-                    Text("Enter IP and secret, or scan the QR code.")
+                    Text("Enter webui host, or scan a QR code.")
                         .font(.body)
                         .foregroundStyle(.white.opacity(0.85))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
-                    Text("Use Tailscale on both devices for the connection.")
+                    Text("Use Tailscale on your phone and your webui machine.")
                         .font(.footnote)
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
@@ -49,11 +48,6 @@ public struct ConnectHeroView: View {
                         VStack(spacing: 12) {
                             TextField("IP or hostname", text: $manualHost)
                                 .keyboardType(.URL)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .font(.system(.body, design: .monospaced))
-                                .textFieldStyle(.roundedBorder)
-                            SecureField("Secret / token", text: $manualSecret)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .font(.system(.body, design: .monospaced))
@@ -123,9 +117,9 @@ public struct ConnectHeroView: View {
             let endpoint = try EndpointQR.endpoint(from: payload)
             try store.add(endpoint, activate: true)
         } catch EndpointQR.Error.invalidEncoding {
-            error = "That doesn't look like a Hermes connect code. It should start with \"hermes:agent:v1:\"."
+            error = "That doesn't look like a valid connect code."
         } catch EndpointQR.Error.unsupportedVersion(let v) {
-            error = "This Mac is using share protocol v\(v); update Hermes on either the Mac or the iPhone."
+            error = "Unsupported connect code version (v\(v)). Update the app and webui to compatible versions."
         } catch {
             self.error = "\(error.localizedDescription)"
         }
@@ -140,17 +134,13 @@ public struct ConnectHeroView: View {
             error = "Enter a Tailscale IP or hostname."
             return
         }
-        let normalized = host.contains("://") ? host : "http://\(host.contains(":") ? host : "\(host):8787")"
-        guard let url = URL(string: normalized), let scheme = url.scheme?.lowercased(),
-              ["http", "https"].contains(scheme) else {
+        guard let url = EndpointURLBuilder.makeURL(from: host) else {
             error = "Host must be a valid IP or hostname."
             return
         }
-        let secret = manualSecret.trimmingCharacters(in: .whitespacesAndNewlines)
         let endpoint = HermesEndpoint(
             url: url,
-            displayName: host,
-            bearerToken: secret.isEmpty ? nil : secret
+            displayName: host
         )
         do {
             try store.add(endpoint, activate: true)

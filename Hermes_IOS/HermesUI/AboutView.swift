@@ -12,22 +12,22 @@ public struct AboutView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("Hermes")
+                    Text("webui Connector")
                         .font(.largeTitle.weight(.semibold))
-                    Text("Native iOS client for Hermes Agent.")
+                    Text("Native iOS client for any webui.")
                         .font(.title3)
                         .foregroundStyle(.secondary)
 
                     Group {
                         sectionHeader("What it does")
-                        Text("Loads your configured Hermes Agent dashboard in a WebKit view and gives the dashboard access to iPhone-native APIs — camera, biometrics, notifications, share sheet, clipboard, haptics, document picker, text-to-speech, QR generation, and more — via a JavaScript bridge.")
+                        Text("Loads your configured webui in a WebKit view and gives it access to phone-native APIs — camera, biometrics, notifications, share sheet, clipboard, haptics, document picker, text-to-speech, QR generation, and more — via a JavaScript bridge.")
 
                         sectionHeader("How you connect")
-                        Text("Scan the QR shown by Hermes on your Mac, or paste your agent URL. The URL plus optional TLS fingerprint and bearer token are stored in the iOS Keychain. The app does not transmit your data anywhere except to the agent endpoint you configured.")
+                        Text("Scan a connect QR code, or enter your webui URL manually. The URL and optional TLS fingerprint are stored in the iOS Keychain. The app only connects to endpoints you configure.")
 
                         sectionHeader("Reachability — Tailscale recommended")
-                        Text("To reach your Mac from anywhere (cellular, hotel WiFi, etc.), install Tailscale on both your Mac and iPhone and use your Mac's tailnet hostname as the agent URL. Tailscale is free for personal use and gives you a stable address with zero port forwarding.")
-                        Text("Other setups work too — LAN-only, public domain with TLS, Cloudflare Tunnel, ngrok — the app accepts any URL. Hermes does not operate any relay or coordination server of its own.")
+                        Text("To reach your webui machine from anywhere (cellular, hotel Wi-Fi, etc.), install Tailscale on both devices, then use the machine's Tailscale hostname or IP.")
+                        Text("Other setups also work, including LAN-only or public domain with TLS. The app accepts any reachable URL and does not rely on a relay server.")
                             .padding(.top, 4)
                         Link("Get Tailscale", destination: URL(string: "https://apps.apple.com/us/app/tailscale/id1470499037")!)
                             .padding(.top, 4)

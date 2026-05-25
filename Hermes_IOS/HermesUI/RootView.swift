@@ -25,14 +25,16 @@ struct RootView: View {
             if let active = store.activeEndpoint {
                 HermesWebView(endpoint: active, bridge: bridge, reconnectGeneration: settings.reconnectNonce)
                     .ignoresSafeArea()
-            } else {
-                ConnectHeroView(store: store)
-            }
 
-            launcherOverlay
+                launcherOverlay
+            } else {
+                SettingsView(store: store, connectionOnly: true)
+            }
         }
         .sheet(isPresented: $showingSettings) {
-            SettingsView(store: store)
+            SettingsView(store: store, connectionOnly: false) {
+                showingSettings = false
+            }
         }
     }
 
@@ -116,4 +118,5 @@ struct RootView: View {
         let clampedY = min(max(point.y, minY), maxY)
         return CGPoint(x: clampedX, y: clampedY)
     }
+
 }

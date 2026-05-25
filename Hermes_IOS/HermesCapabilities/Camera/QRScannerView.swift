@@ -1,5 +1,4 @@
 import SwiftUI
-import AVFoundation
 
 /// SwiftUI wrapper around `QRScannerController`. Handles the permission gate so callers can drop this
 /// directly into a sheet without preflight code.
@@ -20,7 +19,6 @@ public struct QRScannerView: View {
     public let onResult: (String) -> Void
     public let onCancel: () -> Void
 
-    @State private var permission: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @State private var scannerError: String?
 
     public init(onResult: @escaping (String) -> Void, onCancel: @escaping () -> Void) {
@@ -30,7 +28,7 @@ public struct QRScannerView: View {
 
     public var body: some View {
         NavigationStack {
-            content
+            scannerSurface
                 .navigationTitle("Scan Pairing QR")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -38,42 +36,6 @@ public struct QRScannerView: View {
                         Button("Cancel", action: onCancel)
                     }
                 }
-        }
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        switch permission {
-        case .authorized:
-            scannerSurface
-        case .notDetermined:
-            VStack(spacing: 16) {
-                Text("Hermes needs camera access to scan the pairing QR shown by your Mac.")
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                Button("Allow Camera") {
-                    Task {
-                        let granted = await AVCaptureDevice.requestAccess(for: .video)
-                        permission = granted ? .authorized : .denied
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-            }
-            .padding()
-        case .denied, .restricted:
-            VStack(spacing: 16) {
-                Text("Camera access is off for Hermes. Open Settings to allow it, or paste the pairing payload from your Mac instead.")
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    Link("Open Settings", destination: url)
-                        .buttonStyle(.borderedProminent)
-                }
-                Button("Use payload instead", action: onCancel)
-            }
-            .padding()
-        @unknown default:
-            Text("Camera state is unknown.").padding()
         }
     }
 

@@ -29,7 +29,7 @@ public final class BiometricsCapability: Capability, @unchecked Sendable {
     public func invoke(method: String, params: CapabilityParams) async throws -> CapabilityResult {
         switch method {
         case "authenticate":
-            let reason = params["reason"]?.stringValue ?? "Authorize Hermes action"
+            let reason = params["reason"]?.stringValue ?? "Authorize this action"
             let ctx = LAContext()
             do {
                 let success = try await ctx.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason)

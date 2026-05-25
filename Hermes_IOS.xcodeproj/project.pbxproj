@@ -24,6 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3A6D2F532000000100000001 /* Config/SigningDefaults.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/SigningDefaults.xcconfig; sourceTree = "<group>"; };
 		E988458F2FC3AFC0009B3F11 /* Hermes_IOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hermes_IOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E988459C2FC3AFE1009B3F11 /* Hermes_IOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Hermes_IOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E98845A62FC3AFE1009B3F11 /* Hermes_IOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Hermes_IOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -72,6 +73,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E91452622FC4A1B600EB4C78 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				3A6D2F532000000100000001 /* Config/SigningDefaults.xcconfig */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		E98845862FC3AFC0009B3F11 = {
 			isa = PBXGroup;
 			children = (
@@ -79,6 +88,7 @@
 				E988459F2FC3AFE1009B3F11 /* Hermes_IOSTests */,
 				E98845A92FC3AFE1009B3F11 /* Hermes_IOSUITests */,
 				E98845902FC3AFC0009B3F11 /* Products */,
+				E91452622FC4A1B600EB4C78 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -390,11 +400,13 @@
 		};
 		E98845B12FC3AFE1009B3F11 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3A6D2F532000000100000001 /* Config/SigningDefaults.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(HERMES_DEVELOPMENT_TEAM)";
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_RESOURCE_FILE_NAMES = Info.plist;
 				EXCLUDED_SOURCE_FILE_NAMES = Info.plist;
@@ -405,7 +417,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOS;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HERMES_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -419,11 +431,13 @@
 		};
 		E98845B22FC3AFE1009B3F11 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3A6D2F532000000100000001 /* Config/SigningDefaults.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(HERMES_DEVELOPMENT_TEAM)";
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_RESOURCE_FILE_NAMES = Info.plist;
 				EXCLUDED_SOURCE_FILE_NAMES = Info.plist;
@@ -434,7 +448,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOS;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HERMES_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -455,7 +469,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOSTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HERMES_TEST_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -476,7 +490,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOSTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HERMES_TEST_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -495,7 +509,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOSUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HERMES_UI_TEST_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -514,7 +528,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOSUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HERMES_UI_TEST_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

@@ -69,7 +69,7 @@ public enum EndpointQR {
             url: url,
             displayName: payload.displayName,
             leafCertFingerprint: payload.leafCertFingerprint,
-            bearerToken: payload.bearerToken
+            bearerToken: nil
         )
     }
 }

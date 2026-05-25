@@ -1,0 +1,8 @@
+// Shared signing defaults committed to git.
+// Local values are loaded from LocalSigning.xcconfig (ignored by git).
+#include? "LocalSigning.xcconfig"
+
+HERMES_DEVELOPMENT_TEAM =
+HERMES_APP_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOS
+HERMES_TEST_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOSTests
+HERMES_UI_TEST_BUNDLE_IDENTIFIER = com.hermeswebui.HermesIOSUITests

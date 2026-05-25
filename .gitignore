@@ -29,3 +29,6 @@ secrets.xcconfig
 .vscode/
 .idea/
 *.swp
+
+# Local Xcode signing overrides
+Config/LocalSigning.xcconfig

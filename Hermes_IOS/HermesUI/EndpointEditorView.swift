@@ -6,14 +6,12 @@ public struct EndpointEditorView: View {
     let endpoint: HermesEndpoint
 
     @State private var host: String
-    @State private var secret: String
     @State private var error: String?
 
     public init(store: EndpointStore = .shared, endpoint: HermesEndpoint) {
         self.store = store
         self.endpoint = endpoint
         _host = State(initialValue: endpoint.url.absoluteString)
-        _secret = State(initialValue: endpoint.bearerToken ?? "")
     }
 
     public var body: some View {
@@ -24,11 +22,6 @@ public struct EndpointEditorView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
-                        .font(.system(.body, design: .monospaced))
-
-                    SecureField("Secret / token", text: $secret)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
                         .font(.system(.body, design: .monospaced))
                 }
 
@@ -63,20 +56,16 @@ public struct EndpointEditorView: View {
             return
         }
 
-        let normalized = trimmed.contains("://") ? trimmed : "http://\(trimmed.contains(":") ? trimmed : "\(trimmed):8787")"
-        guard let url = URL(string: normalized),
-              let scheme = url.scheme?.lowercased(),
-              ["http", "https"].contains(scheme) else {
+        guard let url = EndpointURLBuilder.makeURL(from: trimmed) else {
             error = "Host must be a valid IP or hostname."
             return
         }
 
-        let token = secret.trimmingCharacters(in: .whitespacesAndNewlines)
         let updated = HermesEndpoint(
             url: url,
             displayName: url.host ?? trimmed,
             leafCertFingerprint: endpoint.leafCertFingerprint,
-            bearerToken: token.isEmpty ? nil : token,
+            bearerToken: nil,
             addedAt: endpoint.addedAt
         )
 
